@@ -1,0 +1,29 @@
+{
+  "name": "api.zar.network",
+  "version": "0.0.1",
+  "description": "API backend for ZAR Network",
+  "main": "api.zar.network.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonnell/zarApi.git"
+  },
+  "author": "antonnell.crypto@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/antonnell/zarApi/issues"
+  },
+  "homepage": "https://github.com/antonnell/zarApi#readme",
+  "dependencies": {
+    "async": "^3.1.0",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "express": "^4.17.1",
+    "helmet": "^3.20.0",
+    "http-auth": "^3.2.3",
+    "morgan": "^1.9.1",
+    "pg-promise": "^8.7.5"
+  }
+}
