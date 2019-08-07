@@ -28,6 +28,7 @@ app.all('/*', function(req, res, next) {
 })
 
 app.use(morgan('dev'))
+
 app.use(auth.connect(basic))
 app.use(helmet())
 app.use(compression())
@@ -116,7 +117,6 @@ app.use(function(err, req, res) {
   }
 })
 
-var options = {}
 https.globalAgent.maxSockets = 50
 app.set('port', 8000)
 var server = null

@@ -4,7 +4,8 @@
   "description": "API backend for ZAR Network",
   "main": "api.zar.network.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node api.zar.network.js",
+    "test": "mocha ./tests --recursive"
   },
   "repository": {
     "type": "git",
@@ -20,10 +21,17 @@
     "async": "^3.1.0",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
+    "crypto": "^1.0.1",
     "express": "^4.17.1",
     "helmet": "^3.20.0",
     "http-auth": "^3.2.3",
+    "jwt-simple": "^0.5.6",
     "morgan": "^1.9.1",
-    "pg-promise": "^8.7.5"
+    "pg-promise": "^8.7.5",
+    "sha256": "^0.2.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
   }
 }
