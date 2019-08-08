@@ -1,26 +1,52 @@
+const {
+  db,
+  encryption
+} = require('../helpers');
+
 const beneficiaries = {
   createBeneficiary() {
     encryption.descryptPayload(req, res, next, (data) => {
 
-      const validation = accounts.validateCreateBeneficiary(data)
+      const validation = beneficiaries.validateCreateBeneficiary(data)
       if(!validation) {
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      const token = encryption.decodeToken(req, res)
-      accounts.insertBankAccount(token.user, data, (err, bankAccount) => {
-
+      beneficiaries.getUserDetails(data, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
         }
 
-        res.status(205)
-        res.body = { 'status': 200, 'success': true, 'result': bankAccount }
-        return next(null, req, res, next)
+        if(userDetails.length > 1) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Multiple users matching the provided information returned' }
+          return next(null, req, res, next)
+        }
+
+        if(!userDetails || userDetails.length == 0) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'No matching user found' }
+          return next(null, req, res, next)
+
+          //send email to user to make them sign up to receive the funds
+        }
+
+        const token = encryption.decodeToken(req, res)
+        beneficiaries.insertBeneficiary(token.user, data, userDetails[0], (err, beneficiary) => {
+          if(err) {
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': beneficiary }
+          return next(null, req, res, next)
+        })
       })
     })
   },
@@ -28,44 +54,41 @@ const beneficiaries = {
   validateCreateBeneficiary(data) {
     const {
       name,
-      account_type
+      reference,
+      mobile_number,
+      email_address,
+      account_address
     } = data
 
     if(!name) {
       return 'name is required'
     }
 
-    if(!account_type) {
-      return 'account_type is required'
+    if(!reference) {
+      return 'reference is required'
+    }
+
+    if(!mobile_number && !email_address && !account_address) {
+      return 'beneficiary identifier is required'
     }
 
     return true
   },
 
-  insertBankAccount(user, data, callback) {
-    db.oneOrNone('select * from user where uuid = $1', [data.user_uuid])
-    .then((bank) => {
-      if(!bank) {
-        return callback("bank_uuid is invalid")
-      }
+  getUserDetails(data, callback) {
+    db.manyOrNone('select u.* from users u left join accounts a on a.user_uuid = u.uuid where u.email_address = $1 or u.mobile_number = $2 or (a.address = $3 and u.email_address != $1 and u.mobile_number != $2);',
+    [data.email_address, data.mobile_number, data.account_address])
+    .then((users) => {
+      callback(null, users)
+    })
+    .catch(callback)
+  },
 
-      db.oneOrNone('select * from bank_account_types where uuid = $1', [data.account_type_uuid])
-      .then((accountType) => {
-        if(!accountType) {
-          return callback("account_type_uuid is invalid")
-        }
-
-        db.oneOrNone('insert into bank_accounts (uuid, user_uuid, bank_uuid, name, full_name, account_number, account_type_uuid, kyc_approved, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning uuid, name, kyc_approved, full_name, created;',
-        [user.uuid, data.bank_uuid, data.name, data.full_name, data.account_number, data.account_type_uuid, false])
-        .then((account) => {
-
-          account.bank_name = bank.name
-          account.account_type = accountType.account_type
-          callback(null, account)
-        })
-        .catch(callback)
-      })
-      .catch(callback)
+  insertBeneficiary(user, data, beneficiaryUser, callback) {
+    db.oneOrNone('insert into beneficiaries (uuid, user_uuid, beneficiary_user_uuid, name, mobile_number, email_address, account_address, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning name, mobile_number, email_address, account_address, reference;',
+    [user.uuid, beneficiaryUser.uuid, data.name, data.mobile_number, data.email_address, data.account_address, data.reference])
+    .then((beneficiary) => {
+      callback(null, account)
     })
     .catch(callback)
   },

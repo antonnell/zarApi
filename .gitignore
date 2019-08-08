@@ -1,3 +1,4 @@
 node_modules/
 /config/secret.jsx
 /config/config.jsx
+/config/config.json
