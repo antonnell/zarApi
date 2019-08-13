@@ -36,6 +36,9 @@ app.use(compression())
 app.use('/', routes)
 
 function handleData(req, res) {
+  res.set('Content-Type', 'application/json')
+  res.setHeader('Content-Type', 'application/json')
+
   if (res.statusCode === 205) {
     if (res.body) {
       if (res.body.length === 0) {
@@ -88,6 +91,8 @@ function handleData(req, res) {
 }
 app.use(handleData)
 app.use(function(err, req, res) {
+  res.setHeader('Content-Type', 'application/json')
+
   if (err) {
     if (res.statusCode == 500) {
       res.status(250)

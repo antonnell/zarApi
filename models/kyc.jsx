@@ -1,5 +1,5 @@
 const kyc = {
-  upgradeKYC() {
+  upgradeKYC(req, res, next) {
 
   }
 

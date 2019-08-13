@@ -1,5 +1,9 @@
-const db = require('../helpers').db;
-const encryption = require('../helpers').encryption
+const {
+  db,
+  encryption,
+  otpHelper
+} = require('../helpers');
+
 
 const auth = {
 
@@ -7,13 +11,14 @@ const auth = {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = auth.validateLogin(data)
-      if(!validation) {
+      if(validation !== true) {
+        console.log('returning error')
         res.status(400)
-        res.body = { 'status': 400, 'success': false, 'result': result }
+        res.body = { 'status': 400, 'success': false, 'result': validation }
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(mobile_number, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -49,6 +54,9 @@ const auth = {
   },
 
   validateLogin(data) {
+
+    console.log(data)
+
     const {
       mobile_number,
       password
@@ -74,24 +82,159 @@ const auth = {
   },
 
   requestResetPassword(req, res, next) {
+    encryption.descryptPayload(req, res, next, (data) => {
 
+      const validation = auth.validateRequestResetPassword(data)
+      if(validation !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': validation }
+        return next(null, req, res, next)
+      }
+
+      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
+        if(err) {
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        if(!userDetails) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'No matching user found' }
+          return next(null, req, res, next)
+        }
+
+        const OTP = otpHelper.generateOTP()
+        auth.insertOTP(userDetails, OTP, (err, otpUUID) => {
+
+          const OTPMessage = 'Your ZAR Network OTP is: '+OTP
+          sms.send(userDetails.mobile_number, OTPMessage, (err) => {
+
+            auth.updateOTPSent(otpUUID, (err) => {
+              if(err) {
+                res.status(500)
+                res.body = { 'status': 500, 'success': false, 'result': err }
+                return next(null, req, res, next)
+              }
+
+              res.status(205)
+              res.body = { 'status': 200, 'success': true, 'result': 'OTP message sent' }
+              return next(null, req, res, next)
+            })
+          })
+        })
+      })
+
+    })
+  },
+
+  validateRequestResetPassword(data) {
+    const {
+      mobile_number
+    } = data
+
+    if(!mobile_number) {
+      return 'mobile_number is required'
+    }
+
+    return true
+  },
+
+  insertOTP(user, otp, callback) {
+    db.oneOrNone('insert into otp (uuid, user_uuid, token, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid;', [user.uuid, otp])
+    .then((otpUUID) => {
+      callback(null, otpUUID.uuid)
+    })
+    .catch(callback)
+  },
+
+  updateOTPSent(otpUUID, callback) {
+    db.none('update otp set sent = true, sent_time = now(), modified = now() where uuid = $1', [otpUUID])
+    .then(callback)
+    .catch(callback)
   },
 
   setPassword(req, res, next) {
+    encryption.descryptPayload(req, res, next, (data) => {
 
+      const validation = auth.validateSetPassword(data)
+      if(validation !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': validation }
+        return next(null, req, res, next)
+      }
+
+      auth.selectValidationRequest(data.validation_uuid, (err, validationRequest)=> {
+        if(err) {
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        if(!validationRequest || validationRequest.validated !== true) {
+          res.status(204)
+          res.body = { 'status': 400, 'success': false, 'result': 'Invalid authentication' }
+          return next(null, req, res, next)
+        }
+
+        const password = encryption.saltPassword(data.password)
+        auth.updatePassword(password, validationRequest, (err) => {
+          if(err) {
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': 'Password updated' }
+          return next(null, req, res, next)
+        })
+      })
+    })
+  },
+
+  validateSetPassword(data) {
+    const {
+      new_password,
+      validation_uuid
+    } = data
+
+    if(!new_password) {
+      return 'new_password is required'
+    }
+
+    if(!validation_uuid) {
+      return 'validation_uuid is required'
+    }
+
+    return true
+  },
+
+  selectValidationRequest(uuid, callback) {
+    db.oneOrNone('select * otp where uuid = $1', [uuid])
+    .then((otp) => {
+      callback(null, otp)
+    })
+    .catch(callback)
+  },
+
+  updatePassword(password, validationRequest, callback) {
+    db.none('update user_passwords set password=$2, salt=$3 where uuid = $1;', [validationRequest.user_uuid, password.passwordHash, password.salt])
+    .then(callback)
+    .catch(callback)
   },
 
   register(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = auth.validateRegister(data)
-      if(!validation) {
+      if(validation !== true) {
         res.status(400)
-        res.body = { 'status': 400, 'success': false, 'result': result }
+        res.body = { 'status': 400, 'success': false, 'result': validation }
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(mobile_number, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -104,7 +247,7 @@ const auth = {
           return next(null, req, res, next)
         }
 
-        const password = encryption.saltPassword(req.body.password)
+        const password = encryption.saltPassword(data.password)
 
         auth.insertUser(data, password, (err, userDetails) => {
           if(err) {

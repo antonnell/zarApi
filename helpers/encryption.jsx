@@ -5,6 +5,7 @@ const algorithm = 'aes-256-ctr';
 const bip39 = require('bip39');
 const config = require('../config');
 const generator = require('generate-password');
+const randomstring = require("randomstring");
 
 const encryption = {
   encrypt(text, password){
@@ -65,6 +66,7 @@ const encryption = {
       data = JSON.parse(payload)
       callback(data)
     } catch (ex) {
+      console.log(ex)
       res.status(501)
       res.body = { 'status': 501, 'success': false, 'message': ex }
       return next(null, req, res, next)
@@ -158,6 +160,14 @@ const encryption = {
       strict: true
     })
   },
+
+  generateRandomString(length) {
+    return randomstring.generate({
+      length: length,
+      charset: 'alphabetic',
+      capitalization: 'uppercase'
+    })
+  }
 }
 
 String.prototype.hexEncode = function(){

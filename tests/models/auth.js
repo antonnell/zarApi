@@ -1,23 +1,37 @@
 const expect = require('chai').expect;
+const helper = require('../helper.js')
+let request = require('supertest')
+request = request('http://localhost:8000')
 
-const { login, register } = require('../../models/auth.jsx');
+const username = helper.username
+const password = helper.password
 
-let req = {
-  body: {},
-};
+describe('POST /api/v1/login', function () {
 
-let res = {
-  sendCalledWith: '',
-  send: function(arg) {
-    this.sendCalledWith = arg;
-  }
-};
+  const loginPayload1 = helper.encrypt({ password: '123123123' }, '/api/v1/login')
+  it('responds with 400 Mobile_number required', function (done) {
+    request.post('/api/v1/login')
+      .set('Accept', 'application/json')
+      .auth(username, password)
+      .send(loginPayload1)
+      .expect(400, done);
+  });
 
-describe('auth Route', function() {
-    describe('login() function', function() {
-        it('Should error out if no mobile_number provided ', function() {
-            login(req, res);
-            expect(res.sendCalledWith).to.contain('error');
-        });
-    })
+  const loginPayload2 = helper.encrypt({ mobile_number: '0849411359' }, '/api/v1/login')
+  it('responds with 400 Password required', function (done) {
+    request.post('/api/v1/login')
+      .set('Accept', 'application/json')
+      .auth(username, password)
+      .send(loginPayload2)
+      .expect(400, done);
+  });
+
+  const loginPayload3 = helper.encrypt({ mobile_number: '0849411359', password: '123123123' }, '/api/v1/login')
+  it('responds with 204 User not found', function (done) {
+    request.post('/api/v1/login')
+      .set('Accept', 'application/json')
+      .auth(username, password)
+      .send(loginPayload3)
+      .expect(204, done);
+  });
 });

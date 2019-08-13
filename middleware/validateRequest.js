@@ -13,6 +13,7 @@ module.exports = function(req, res, next) {
     try {
       var decoded = jwt.decode(token, require('../config/secret.jsx')())
       if (decoded.exp <= Date.now()) {
+        res.set('Content-Type', 'application/json')
         res.status(401)
         res.json({
           'status': 401,
@@ -21,6 +22,7 @@ module.exports = function(req, res, next) {
         return
       }
       if (!decoded.user) {
+        res.set('Content-Type', 'application/json')
         res.status(401)
         res.json({
           'status': 401,
@@ -29,6 +31,7 @@ module.exports = function(req, res, next) {
         return
       }
       if (sha256(decoded.user.email) !== key) {
+        res.set('Content-Type', 'application/json')
         res.status(401)
         res.json({
           'status': 401,
@@ -41,6 +44,7 @@ module.exports = function(req, res, next) {
       //validateUser(req, res, next, decoded.user.username) // The key would be the logged in user's username
     } catch (err) {
       console.log(err)
+        res.set('Content-Type', 'application/json')
       res.status(500)
       res.json({
         'status': 500,
@@ -49,6 +53,7 @@ module.exports = function(req, res, next) {
       })
     }
   } else {
+    res.set('Content-Type', 'application/json')
     res.status(404)
     res.json({
       'status': 404,

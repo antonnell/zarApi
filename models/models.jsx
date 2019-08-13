@@ -6,6 +6,7 @@ const Kyc = require('./kyc.jsx');
 const Otp = require('./otp.jsx');
 const Payments = require('./payments.jsx');
 const Users = require('./users.jsx');
+const Testing = require('./testing.jsx');
 
 const models = {
   accounts: Accounts,
@@ -16,6 +17,7 @@ const models = {
   otp: Otp,
   payments: Payments,
   users: Users,
+  testing: Testing
 }
 
 module.exports = models

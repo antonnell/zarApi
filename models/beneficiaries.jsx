@@ -8,9 +8,9 @@ const beneficiaries = {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = beneficiaries.validateCreateBeneficiary(data)
-      if(!validation) {
+      if(validation !== true) {
         res.status(400)
-        res.body = { 'status': 400, 'success': false, 'result': result }
+        res.body = { 'status': 400, 'success': false, 'result': validation }
         return next(null, req, res, next)
       }
 

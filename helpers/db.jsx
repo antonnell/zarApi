@@ -10,6 +10,4 @@ const cn = {
 }
 const db = pgp(cn)
 
-module.exports = {
-  pgp, db
-}
+module.exports = db

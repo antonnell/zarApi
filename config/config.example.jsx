@@ -4,6 +4,9 @@ const config = {
   user: "",
   password: "",
 
+  emailerUser: '',
+  emailerPassword: '',
+
   encrKey: "",
 
   //Binance
