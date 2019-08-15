@@ -6,7 +6,7 @@ const {
 } = require('../helpers');
 
 const otp = {
-  requestOTP() {
+  requestOTP(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
       const OTP = otpHelper.generateOTP()
       const token = encryption.decodeToken(req, res)
@@ -69,7 +69,7 @@ const otp = {
     .catch(callback)
   },
 
-  verifyOTP() {
+  verifyOTP(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
       const validation = users.validateVerifyOTP(data)
       if(validation !== true) {

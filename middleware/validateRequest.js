@@ -30,7 +30,7 @@ module.exports = function(req, res, next) {
         })
         return
       }
-      if (sha256(decoded.user.email) !== key) {
+      if (sha256(decoded.user.email_address) !== key) {
         res.set('Content-Type', 'application/json')
         res.status(401)
         res.json({

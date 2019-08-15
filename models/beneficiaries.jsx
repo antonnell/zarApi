@@ -4,7 +4,7 @@ const {
 } = require('../helpers');
 
 const beneficiaries = {
-  createBeneficiary() {
+  createBeneficiary(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = beneficiaries.validateCreateBeneficiary(data)
@@ -85,15 +85,15 @@ const beneficiaries = {
   },
 
   insertBeneficiary(user, data, beneficiaryUser, callback) {
-    db.oneOrNone('insert into beneficiaries (uuid, user_uuid, beneficiary_user_uuid, name, mobile_number, email_address, account_address, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning name, mobile_number, email_address, account_address, reference;',
+    db.oneOrNone('insert into beneficiaries (uuid, user_uuid, beneficiary_user_uuid, name, mobile_number, email_address, account_address, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning uuid, name, mobile_number, email_address, account_address, reference;',
     [user.uuid, beneficiaryUser.uuid, data.name, data.mobile_number, data.email_address, data.account_address, data.reference])
     .then((beneficiary) => {
-      callback(null, account)
+      callback(null, beneficiary)
     })
     .catch(callback)
   },
 
-  getBeneficiaries() {
+  getBeneficiaries(req, res, next) {
     const token = encryption.decodeToken(req, res)
     db.manyOrNone("select uuid, name, mobile_number, email_address, account_address, reference, created from beneficiaries where user_uuid = $1;", [token.user.uuid])
     .then((beneficiaries) => {

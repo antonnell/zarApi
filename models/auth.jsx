@@ -12,7 +12,6 @@ const auth = {
 
       const validation = auth.validateLogin(data)
       if(validation !== true) {
-        console.log('returning error')
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': validation }
         return next(null, req, res, next)
@@ -31,20 +30,20 @@ const auth = {
           return next(null, req, res, next)
         }
 
-        const saltPassword = encryption.saltPassword(password, userDetails.salt)
+        const saltPassword = encryption.saltPassword(data.password, userDetails.salt)
 
-        if(saltPassword.passwordHash != userDetails.password) {
+        if(saltPassword.passwordHash !== userDetails.password) {
           res.status(204)
           res.body = { 'status': 204, 'success': false, 'result': 'Invalid username or password' }
           return next(null, req, res, next)
         }
 
-        //do token stuff, gen auth stuff blah blah blah.
-        userDetails.jwt = encryption.genToken(userDetails)
-
         //remove password
         delete userDetails.salt
         delete userDetails.password
+
+        //do token stuff, gen auth stuff blah blah blah.
+        userDetails.jwt = encryption.genToken(userDetails)
 
         res.status(205)
         res.body = { 'status': 200, 'success': true, 'result': userDetails }
@@ -54,8 +53,6 @@ const auth = {
   },
 
   validateLogin(data) {
-
-    console.log(data)
 
     const {
       mobile_number,
@@ -242,8 +239,8 @@ const auth = {
         }
 
         if(userDetails) {
-          res.status(204)
-          res.body = { 'status': 204, 'success': false, 'result': 'User already registered' }
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'User already registered' }
           return next(null, req, res, next)
         }
 
@@ -272,6 +269,7 @@ const auth = {
       firstname,
       lastname,
       mobile_number,
+      email_address,
       password,
     } = data
 
@@ -287,6 +285,10 @@ const auth = {
       return 'mobile_number is required'
     }
 
+    if(!email_address) {
+      return 'email_address is required'
+    }
+
     if(!password) {
       return 'password is required'
     }
@@ -294,8 +296,8 @@ const auth = {
     return true
   },
 
-  insertUser(data, password) {
-    db.oneOrNone('insert into users (uuid, firstname, surname, email_address, mobile_number, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid, firstname, surname, email_address, mobile_number;', [data.firstname, data.lastname, data.email_address, data.mobile_number])
+  insertUser(data, password, callback) {
+    db.oneOrNone('insert into users (uuid, firstname, lastname, email_address, mobile_number, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid, firstname, lastname, email_address, mobile_number;', [data.firstname, data.lastname, data.email_address, data.mobile_number])
     .then((userDetails) => {
       if(userDetails) {
         db.none('insert into user_passwords (uuid, user_uuid, password, salt, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, now());', [userDetails.uuid, password.passwordHash, password.salt])

@@ -7,7 +7,7 @@ const async = require('async')
 
 const payments = {
 
-  getTransactions() {
+  getTransactions(req, res, next) {
     const token = encryption.decodeToken(req, res)
     db.manyOrNone("select uuid, reference, amount, created from transfers where user_uuid = $1;", [token.user.uuid])
     .then((transactions) => {
@@ -27,7 +27,7 @@ const payments = {
     })
   },
 
-  pay() {
+  pay(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = payments.validatePay(data)
@@ -186,7 +186,7 @@ const payments = {
     .catch(callback)
   },
 
-  requestDeposit() {
+  requestDeposit(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = payments.validateRequestDeposit(data)
@@ -242,7 +242,7 @@ const payments = {
     })
   },
 
-  validateRequestDeposit() {
+  validateRequestDeposit(data) {
     const {
       amount
     } = data
@@ -294,7 +294,7 @@ const payments = {
 
   },
 
-  withdraw() {
+  withdraw(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = payments.validateWithdraw(data)

@@ -4,10 +4,10 @@ const {
 } = require('../helpers');
 
 const banks = {
-  createBankAccount() {
+  createBankAccount(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
-      const validation = accounts.validateCreateBankAccount(data)
+      const validation = banks.validateCreateBankAccount(data)
       if(validation !== true) {
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': validation }
@@ -15,7 +15,7 @@ const banks = {
       }
 
       const token = encryption.decodeToken(req, res)
-      accounts.insertBankAccount(token.user, data, (err, bankAccount) => {
+      banks.insertBankAccount(token.user, data, (err, bankAccount) => {
 
         if(err) {
           res.status(500)
@@ -90,7 +90,7 @@ const banks = {
     .catch(callback)
   },
 
-  getBankAccounts() {
+  getBankAccounts(req, res, next) {
     const token = encryption.decodeToken(req, res)
     db.manyOrNone("select ba.uuid, ba.name, ba.kyc_approved, ba.account_number, ba.full_name, bat.account_type, b.name as bank_name, ba.created from bank_accounts ba left join banks b on ba.bank_uuid = b.uuid left join bank_account_types bat on bat.uuid = ba.account_type_uuid where ba.user_uuid = $1;", [token.user.uuid])
     .then((bankAccounts) => {
@@ -110,8 +110,8 @@ const banks = {
     })
   },
 
-  getBanks() {
-    db.manyOrNone("select uuid, name, branch_code from banks")
+  getBanks(req, res, next) {
+    db.manyOrNone("select uuid, name, branch_code from banks;", [])
     .then((banks) => {
       res.status(205)
       res.body = { 'status': 200, 'success': true, 'result': banks }
@@ -124,8 +124,8 @@ const banks = {
     })
   },
 
-  getBankAccountTypes() {
-    db.manyOrNone("select uuid, account_type from bank_account_types")
+  getBankAccountTypes(req, res, next) {
+    db.manyOrNone("select uuid, account_type from bank_account_types;", [])
     .then((bankAccountTypes) => {
       res.status(205)
       res.body = { 'status': 200, 'success': true, 'result': bankAccountTypes }

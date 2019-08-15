@@ -76,7 +76,7 @@ const encryption = {
   saltPassword(password, salt) {
 
     if(!salt) {
-      salt = genRandomString(16)
+      salt = encryption.genRandomString(16)
     }
 
     var hash = crypto.createHmac('sha512', salt);
@@ -104,6 +104,11 @@ const encryption = {
       token: token,
       expires: expires
     }
+  },
+  
+  expiresIn(numDays) {
+    var dateObj = new Date()
+    return dateObj.setDate(dateObj.getDate() + numDays)
   },
 
   decodeToken(req, res) {

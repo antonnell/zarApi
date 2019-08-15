@@ -28,6 +28,14 @@ router.post('/api/v1/register', bodyParser.json(), auth.register)
 router.post('/api/v1/resetPassword', bodyParser.json(), auth.requestResetPassword)
 router.post('/api/v1/setPassword', bodyParser.json(), auth.setPassword)
 
+router.post('/api/v1/getBankAccounts', validateRequest, bodyParser.json(), banks.getBankAccounts)
+router.post('/api/v1/createBankAccount', validateRequest, bodyParser.json(), banks.createBankAccount)
+router.post('/api/v1/getBanks', validateRequest, bodyParser.json(), banks.getBanks)
+router.post('/api/v1/getBankAccountTypes', validateRequest, bodyParser.json(), banks.getBankAccountTypes)
+
+router.post('/api/v1/getBeneficiaries', validateRequest, bodyParser.json(), beneficiaries.getBeneficiaries)
+router.post('/api/v1/createBeneficiary', validateRequest, bodyParser.json(), beneficiaries.createBeneficiary)
+
 router.post('/api/v1/setPin', validateRequest, bodyParser.json(), users.setPin)
 router.post('/api/v1/updateName', validateRequest, bodyParser.json(), users.updateName)
 
@@ -38,13 +46,6 @@ router.post('/api/v1/upgradeKYC', validateRequest, bodyParser.json(), kyc.upgrad
 
 router.post('/api/v1/getAccounts', validateRequest, bodyParser.json(), accounts.getAccounts)
 router.post('/api/v1/createAccount', validateRequest, bodyParser.json(), accounts.createAccount)
-
-router.post('/api/v1/getBeneficiaries', validateRequest, bodyParser.json(), beneficiaries.getBeneficiaries)
-router.post('/api/v1/createBeneficiary', validateRequest, bodyParser.json(), beneficiaries.createBeneficiary)
-
-router.post('/api/v1/getBankAccounts', validateRequest, bodyParser.json(), banks.getBankAccounts)
-router.post('/api/v1/createBankAccount', validateRequest, bodyParser.json(), banks.createBankAccount)
-router.post('/api/v1/getBanks', validateRequest, bodyParser.json(), banks.getBanks)
 
 router.post('/api/v1/pay', validateRequest, bodyParser.json(), payments.pay)
 router.post('/api/v1/requestDeposit', validateRequest, bodyParser.json(), payments.requestDeposit)

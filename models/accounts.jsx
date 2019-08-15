@@ -6,7 +6,7 @@ const {
 } = require('../helpers');
 
 const accounts = {
-  createAccount() {
+  createAccount(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = accounts.validateCreateAccount(data)
@@ -103,7 +103,7 @@ const accounts = {
     })
   },
 
-  getAccounts() {
+  getAccounts(req, res, next) {
     const token = encryption.decodeToken(req, res)
     db.manyOrNone("select uuid, name, address, account_type, created from accounts where user_uuid = $1;", [token.user.uuid])
     .then((accounts) => {

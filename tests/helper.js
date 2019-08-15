@@ -5,6 +5,28 @@ const sha256 = require('sha256');
 const username = 'E80F37F52BC4C64EBBFE4ADBBCC756D52D270445BBA4B28D890E8524369E4BE2'
 const password = '568462C4B808FBDCE6EE1728AA3D7C6E802413323975D3EB81372AA510D50CE7'
 
+const userDetails = {
+  firstname: 'John',
+  lastname: 'Doe',
+  mobileNumber: '0849411360',
+  emailAddress: 'johndoe@gmail.com',
+  password: '123123123',
+  bankAccount: {
+    bank: 'ABSA',
+    accountType: 'Savings',
+    name: 'My Account',
+    fullName: 'Mr John Doe',
+    accountNumber: '123123123'
+  },
+  beneficiary: {
+    firstname: 'Jane',
+    lastname: 'Doe',
+    mobileNumber: '0849411361',
+    emailAddress: 'janedoe@gmail.com',
+    password: '123123123',
+    accountAddress: null
+  }
+}
 
 function hexEncode(string) {
   var hex, i;
@@ -35,8 +57,14 @@ function encrypt(data, url) {
   return signData;
 }
 
+function sha256email(email) {
+  return sha256(email)
+}
+
 module.exports = {
   username,
   password,
-  encrypt
+  encrypt,
+  sha256email,
+  userDetails
 }
