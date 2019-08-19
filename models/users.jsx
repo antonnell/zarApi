@@ -1,3 +1,8 @@
+const {
+  db,
+  encryption,
+} = require('../helpers');
+
 const users = {
 
   setPin(req, res, next) {
@@ -13,6 +18,7 @@ const users = {
       const token = encryption.decodeToken(req, res)
       users.getUserDetails(token.user, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -26,6 +32,7 @@ const users = {
 
         users.getPin(token.user, (err, pinDetails) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
@@ -37,17 +44,18 @@ const users = {
             return next(null, req, res, next)
           }
 
-          const pinObj = encryption.saltPassword(pin)
+          const pinObj = encryption.saltPassword(data.pin)
 
-          users.insertPin(token.user, pinObj, (err, newUser) => {
+          users.insertPin(token.user, pinObj, (err) => {
             if(err) {
+              console.log(err)
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
             }
 
             res.status(205)
-            res.body = { 'status': 200, 'success': true, 'result': newUser }
+            res.body = { 'status': 200, 'success': true, 'result': 'Name updated' }
             return next(null, req, res, next)
           })
         })
@@ -62,6 +70,10 @@ const users = {
 
     if(!pin) {
       return 'pin is required'
+    }
+
+    if(pin.length != 6 || isNaN(pin)) {
+      return 'pin is invalid'
     }
 
     return true
@@ -86,10 +98,8 @@ const users = {
   },
 
   insertPin(user, pinObj, callback) {
-    db.oneOrNone('insert into user_pins (uuid, user_uuid, pin, salt, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, now());', [user.uuid, pinObj.passwordHash, pinObj.salt])
-    .then((newUser) => {
-      callback(null, newUser)
-    })
+    db.none('insert into user_pins (uuid, user_uuid, pin, salt, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, now());', [user.uuid, pinObj.passwordHash, pinObj.salt])
+    .then(callback)
     .catch(callback)
   },
 
@@ -106,6 +116,7 @@ const users = {
       const token = encryption.decodeToken(req, res)
       users.getUserDetails(token.user, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -119,6 +130,7 @@ const users = {
 
         users.setName(token.user, data, (err, newUser) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
@@ -150,7 +162,7 @@ const users = {
   },
 
   setName(user, data, callback) {
-    db.oneOrNone('update users set firstname = $2, lastname = $3 where uuid = $1 returning uuid, firstname, lastname, mobile_number, email_address, kyc_approved;', [user.uuid, data.firstname, data.lastname])
+    db.oneOrNone('update users set firstname = $2, lastname = $3 where uuid = $1 returning uuid, firstname, lastname, mobile_number, email_address;', [user.uuid, data.firstname, data.lastname])
     .then((newUser) => {
       callback(null, newUser)
     })

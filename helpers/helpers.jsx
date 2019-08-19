@@ -10,7 +10,7 @@ const helpers = {
   encryption: Encryption,
   zarNetwork: ZarNetwork,
   // ethereum: Ethereum,
-  otp: OTP,
+  otpHelper: OTP,
   sms: SMS
 }
 

@@ -57,8 +57,8 @@ describe('POST /api/v1/getBanks', function () {
       });
   })
 
-  const getBanksPayload = helper.encrypt({  }, '/api/v1/getBanks')
   it('responds with 200 banks array', function (done) {
+    const getBanksPayload = helper.encrypt({  }, '/api/v1/getBanks')
     request.post('/api/v1/getBanks')
       .set('Accept', 'application/json')
       .set('x-key', xKey)
@@ -88,8 +88,8 @@ describe('POST /api/v1/getBankAccountTypes', function () {
       });
   })
 
-  const getBankAccountTypesPayload = helper.encrypt({  }, '/api/v1/getBankAccountTypes')
   it('responds with 200 bankAccountTypes array', function (done) {
+    const getBankAccountTypesPayload = helper.encrypt({  }, '/api/v1/getBankAccountTypes')
     request.post('/api/v1/getBankAccountTypes')
       .set('Accept', 'application/json')
       .set('x-key', xKey)
@@ -143,8 +143,8 @@ describe('POST /api/v1/createBankAccount', function () {
       });
   });
 
-  const createBankAccountPayload1 = helper.encrypt({  }, '/api/v1/createBankAccount')
   it('responds with 400 Something required', function (done) {
+    const createBankAccountPayload1 = helper.encrypt({  }, '/api/v1/createBankAccount')
     request.post('/api/v1/createBankAccount')
       .set('Accept', 'application/json')
       .set('x-key', xKey)

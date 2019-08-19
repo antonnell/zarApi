@@ -66,8 +66,8 @@ describe('POST /api/v1/createBeneficiary', function () {
       });
   });
 
-  const createBeneficiaryPayload1 = helper.encrypt({  }, '/api/v1/createBeneficiary')
   it('responds with 400 Something required', function (done) {
+    const createBeneficiaryPayload1 = helper.encrypt({  }, '/api/v1/createBeneficiary')
     request.post('/api/v1/createBeneficiary')
       .set('Accept', 'application/json')
       .set('x-key', xKey)

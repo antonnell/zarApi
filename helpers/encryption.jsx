@@ -105,7 +105,7 @@ const encryption = {
       expires: expires
     }
   },
-  
+
   expiresIn(numDays) {
     var dateObj = new Date()
     return dateObj.setDate(dateObj.getDate() + numDays)

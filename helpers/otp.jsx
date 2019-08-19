@@ -1,5 +1,5 @@
 const otplib = require('otplib');
-const secret = require('../config/secret.jsx')
+const secret = require('../config/secret.jsx')()
 
 const otp = {
 
@@ -16,3 +16,5 @@ const otp = {
     return isValid
   }
 }
+
+module.exports = otp

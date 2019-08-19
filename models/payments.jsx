@@ -132,7 +132,7 @@ const payments = {
       return 'amount is required'
     }
 
-    if(!isNaN(amount) || amount < 0) {
+    if(isNaN(amount) || amount < 0) {
       return 'amount is invalid'
     }
 
@@ -251,7 +251,7 @@ const payments = {
       return 'amount is required'
     }
 
-    if(!isNaN(amount) || amount < 0) {
+    if(isNaN(amount) || amount < 0) {
       return 'amount is invalid'
     }
 
@@ -372,7 +372,7 @@ const payments = {
       return 'amount is required'
     }
 
-    if(!isNaN(amount) || amount < 0) {
+    if(isNaN(amount) || amount < 0) {
       return 'amount is invalid'
     }
 

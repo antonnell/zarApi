@@ -8,23 +8,30 @@ const password = '568462C4B808FBDCE6EE1728AA3D7C6E802413323975D3EB81372AA510D50C
 const userDetails = {
   firstname: 'John',
   lastname: 'Doe',
-  mobileNumber: '0849411360',
+  newFirstname: 'Johny',
+  newLastname: 'Doey',
+  mobileNumber: '+27849411359',
   emailAddress: 'johndoe@gmail.com',
   password: '123123123',
+  pin: '123123',
   bankAccount: {
     bank: 'ABSA',
     accountType: 'Savings',
-    name: 'My Account',
+    name: 'Test Bank Account',
     fullName: 'Mr John Doe',
     accountNumber: '123123123'
   },
   beneficiary: {
     firstname: 'Jane',
     lastname: 'Doe',
-    mobileNumber: '0849411361',
+    mobileNumber: '+27849411360',
     emailAddress: 'janedoe@gmail.com',
     password: '123123123',
     accountAddress: null
+  },
+  account: {
+    name: 'Test Account',
+    accountType: 'ZAR'
   }
 }
 

@@ -7,39 +7,42 @@ const {
 
 const otp = {
   requestOTP(req, res, next) {
-    encryption.descryptPayload(req, res, next, (data) => {
-      const OTP = otpHelper.generateOTP()
-      const token = encryption.decodeToken(req, res)
+    const OTP = otpHelper.generateOTP()
+    const token = encryption.decodeToken(req, res)
 
-      otp.getUserDetails(token.user, (err, userDetails) => {
-        if(err) {
-          res.status(500)
-          res.body = { 'status': 500, 'success': false, 'result': err }
-          return next(null, req, res, next)
-        }
+    otp.getUserDetails(token.user, (err, userDetails) => {
+      if(err) {
+        res.status(500)
+        res.body = { 'status': 500, 'success': false, 'result': err }
+        return next(null, req, res, next)
+      }
 
-        if(!userDetails) {
-          res.status(400)
-          res.body = { 'status': 400, 'success': false, 'result': 'No matching user found' }
-          return next(null, req, res, next)
-        }
+      if(!userDetails) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': 'No matching user found' }
+        return next(null, req, res, next)
+      }
 
-        otp.insertOTP(token.user, OTP, (err, otpUUID) => {
+      otp.insertOTP(token.user, OTP, (err, otpUUID) => {
 
-          const OTPMessage = 'Your ZAR Network OTP is: '+OTP
-          sms.send(userDetails.mobile_number, OTPMessage, (err) => {
+        const OTPMessage = 'Your ZAR Network OTP is: '+OTP
+        sms.send(userDetails.mobile_number, OTPMessage, (err) => {
+          if(err) {
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
 
-            otp.updateOTPSent(otpUUID, (err) => {
-              if(err) {
-                res.status(500)
-                res.body = { 'status': 500, 'success': false, 'result': err }
-                return next(null, req, res, next)
-              }
-
-              res.status(205)
-              res.body = { 'status': 200, 'success': true, 'result': 'OTP message sent' }
+          otp.updateOTPSent(otpUUID, (err) => {
+            if(err) {
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
-            })
+            }
+
+            res.status(205)
+            res.body = { 'status': 200, 'success': true, 'result': 'OTP message sent' }
+            return next(null, req, res, next)
           })
         })
       })
@@ -71,7 +74,8 @@ const otp = {
 
   verifyOTP(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
-      const validation = users.validateVerifyOTP(data)
+      console.log(data)
+      const validation = otp.validateVerifyOTP(data)
       if(validation !== true) {
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': validation }
@@ -79,6 +83,7 @@ const otp = {
       }
 
       const token = encryption.decodeToken(req, res)
+      console.log(token)
       otp.selectOTP(token.user, data.pin, (err, otpDetails) => {
         if(err) {
           res.status(500)
@@ -92,7 +97,7 @@ const otp = {
           return next(null, req, res, next)
         }
 
-        if(!otpHelper.validateOTP(otp)) {
+        if(!otpHelper.validateOTP(data.pin)) {
           res.status(400)
           res.body = { 'status': 400, 'success': false, 'result': 'Invalid OTP' }
           return next(null, req, res, next)
@@ -126,7 +131,7 @@ const otp = {
   },
 
   selectOTP(user, pin, callback) {
-    db.oneOrNone('select * from otp where user_uuid = $1 and otp = $2;', [user.uuid, pin])
+    db.oneOrNone('select * from otp where user_uuid = $1 and token = $2;', [user.uuid, pin])
     .then((otpDetails) => {
       callback(null, otpDetails)
     })

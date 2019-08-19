@@ -7,7 +7,7 @@ const username = helper.username
 const password = helper.password
 const data = helper.userDetails
 
-describe('POST /api/v1/login', function () {
+describe.skip('POST /api/v1/login', function () {
 
   const loginPayload1 = helper.encrypt({ password: data.password }, '/api/v1/login')
   it('responds with 400 Mobile_number required', function (done) {
@@ -38,7 +38,7 @@ describe('POST /api/v1/login', function () {
 });
 
 
-describe('POST /api/v1/register', function () {
+describe.skip('POST /api/v1/register', function () {
 
   const registerPayload1 = helper.encrypt({ firstname: data.firstname, lastname: data.lastname }, '/api/v1/register')
   it('responds with 400 Mobile_number required', function (done) {

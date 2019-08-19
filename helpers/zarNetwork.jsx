@@ -4,7 +4,11 @@ const httpClient = axios.create({ baseURL: config.api });
 
 const zar = {
   createKey(name, password, callback) {
-
+    return {
+      privateKey: 'superPrivateKey',
+      mnemonic: 'dankMnemonic',
+      address: 'sickAddress'
+    }
   },
 
   issue(tokenName, totalSupply, symbol, mintable, keyName, password, callback) {

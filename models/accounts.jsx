@@ -1,8 +1,7 @@
 const {
   db,
   encryption,
-  zarNetwork,
-  ethereum
+  zarNetwork
 } = require('../helpers');
 
 const accounts = {
@@ -19,7 +18,10 @@ const accounts = {
       if(data.account_type === 'ZAR') {
         accounts.createZarAccount(req, res, next, data)
       } else if (data.account_type === 'ETH') {
-        accounts.createEthAccount(req, res, next, data)
+        // accounts.createEthAccount(req, res, next, data)
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': 'account_type is invalid' }
+        return next(null, req, res, next)
       } else {
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': 'account_type is invalid' }
@@ -79,29 +81,29 @@ const accounts = {
     .catch(callback)
   },
 
-  createEthAccount(req, res, next) {
-
-    const token = encryption.decodeToken(req, res)
-    const password = encryption.genPassword()
-
-    ethereum.createAccount((err, account) => {
-
-      const encrKey = encryption.generateMnemonic()
-      const privateKeyObj = encryption.hashAccountField(account.privateKey, encrKey)
-
-      accounts.insertAccount(token.user.uuid, data.name, account.address, privateKeyObj.phraseHashed, null, null, encrKey, data.account_type, (err, createdAccount) => {
-        if(err) {
-          res.status(500)
-          res.body = { 'status': 500, 'success': false, 'result': err }
-          return next(null, req, res, next)
-        }
-
-        res.status(205)
-        res.body = { 'status': 200, 'success': true, 'result': createdAccount }
-        return next(null, req, res, next)
-      })
-    })
-  },
+  // createEthAccount(req, res, next) {
+  //
+  //   const token = encryption.decodeToken(req, res)
+  //   const password = encryption.genPassword()
+  //
+  //   ethereum.createAccount((err, account) => {
+  //
+  //     const encrKey = encryption.generateMnemonic()
+  //     const privateKeyObj = encryption.hashAccountField(account.privateKey, encrKey)
+  //
+  //     accounts.insertAccount(token.user.uuid, data.name, account.address, privateKeyObj.phraseHashed, null, null, encrKey, data.account_type, (err, createdAccount) => {
+  //       if(err) {
+  //         res.status(500)
+  //         res.body = { 'status': 500, 'success': false, 'result': err }
+  //         return next(null, req, res, next)
+  //       }
+  //
+  //       res.status(205)
+  //       res.body = { 'status': 200, 'success': true, 'result': createdAccount }
+  //       return next(null, req, res, next)
+  //     })
+  //   })
+  // },
 
   getAccounts(req, res, next) {
     const token = encryption.decodeToken(req, res)
