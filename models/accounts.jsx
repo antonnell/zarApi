@@ -52,6 +52,11 @@ const accounts = {
     const password = encryption.genPassword()
 
     zarNetwork.createKey(data.name, password, (err, account) => {
+      if(err) {
+        res.status(500)
+        res.body = { 'status': 500, 'success': false, 'result': err }
+        return next(null, req, res, next)
+      }
 
       const encrKey = encryption.generateMnemonic()
       const privateKeyObj = encryption.hashAccountField(account.privateKey, encrKey)
@@ -74,7 +79,7 @@ const accounts = {
 
   insertAccount(userUUID, name, address, privateKey, mnemonic, password, encrKey, accountType, callback) {
     db.oneOrNone('insert into accounts (uuid, user_uuid, name, address, private_key, mnemonic, password, encr_key, account_type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, $8, now()) returning uuid, name, address, account_type, created;',
-    [userUUID, name, address, privateKey, mnemonic, encrKey, accountType])
+    [userUUID, name, address, privateKey, mnemonic, password, encrKey, accountType])
     .then((account) => {
       callback(null, account)
     })

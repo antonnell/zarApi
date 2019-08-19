@@ -147,7 +147,7 @@ const encryption = {
     }
 
     const password = config.encr_key+':'+dbPassword
-    const aes256seed = encryption.encrypt(keyData.seedPhrase, password)
+    const aes256seed = encryption.encrypt(phrase, password)
 
     return {
       phrase: phrase,

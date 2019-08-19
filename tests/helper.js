@@ -32,7 +32,18 @@ const userDetails = {
   account: {
     name: 'Test Account',
     accountType: 'ZAR'
-  }
+  },
+  payment: {
+    amount: 1000,
+    reference: 'Payment of 1000'
+  },
+  deposit: {
+    amount: 1000
+  },
+  withdraw: {
+    amount: 1000,
+    reference: 'Withdrawal of 1000'
+  },
 }
 
 function hexEncode(string) {

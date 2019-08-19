@@ -9,7 +9,7 @@ const payments = {
 
   getTransactions(req, res, next) {
     const token = encryption.decodeToken(req, res)
-    db.manyOrNone("select uuid, reference, amount, created from transfers where user_uuid = $1;", [token.user.uuid])
+    db.manyOrNone("select uuid, reference, amount, type, created from transactions where user_uuid = $1 order by created desc;", [token.user.uuid])
     .then((transactions) => {
       if(!transactions) {
         res.status(204)
@@ -21,6 +21,7 @@ const payments = {
       return next(null, req, res, next)
     })
     .catch((err) => {
+      console.log(err)
       res.status(500)
       res.body = { 'status': 500, 'success': false, 'result': err }
       return next(null, req, res, next)
@@ -51,22 +52,16 @@ const payments = {
           return next(null, req, res, next)
         }
 
-        payments.getBankAccount(data, (err, bankAccount) => {
+        payments.getAccount(data, (err, account) => {
           if(err) {
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
           }
 
-          if(!bankAccount) {
+          if(!account) {
             res.status(400)
             res.body = { 'status': 400, 'success': false, 'result': 'No matching bank record found' }
-            return next(null, req, res, next)
-          }
-
-          if(!bankAccount.kyc_approved) {
-            res.status(400)
-            res.body = { 'status': 400, 'success': false, 'result': 'Bank account is not KYC approved' }
             return next(null, req, res, next)
           }
 
@@ -82,7 +77,6 @@ const payments = {
               res.body = { 'status': 400, 'success': false, 'result': 'No matching beneficiary record found' }
               return next(null, req, res, next)
             }
-
 
             // do the payments transfer (bnb or eth I guess based on the account_type)
 
@@ -143,6 +137,15 @@ const payments = {
     return true
   },
 
+  getAccount(data, callback) {
+    db.oneOrNone('select * from accounts where uuid = $1;',
+    [data.account_uuid])
+    .then((account) => {
+      callback(null, account)
+    })
+    .catch(callback)
+  },
+
   getBeneficiary(data, callback) {
     db.oneOrNone('select * from beneficiaries where uuid = $1;',
     [data.beneficiary_uuid])
@@ -153,17 +156,16 @@ const payments = {
   },
 
   insertPayment(user, data, callback) {
-    db.oneOrNone('insert into payments (uuid, user_uuid, account_uuid, beneficiary_user_uuid, amount, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid;',
+    db.oneOrNone('insert into payments (uuid, user_uuid, account_uuid, beneficiary_uuid, amount, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid;',
     [user.uuid, data.account_uuid, data.beneficiary_uuid, data.amount, data.reference])
     .then((payment) => {
       callback(null, payment)
 
       //just inserting into transactions for now
-      db.oneOrNone('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
+      db.none('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
       [user.uuid, data.reference, data.amount, payment.uuid, 'Transfer'])
       .then(() => {})
       .catch((err) => { console.log(err) })
-
     })
     .catch(callback)
   },
@@ -211,7 +213,7 @@ const payments = {
         }
 
         payments.getDepositDetails((err, depositDetails) => {
-          payments.getDepositReference(token.user.user_uuid, (err, depositReference) => {
+          payments.getDepositReference(token.user.uuid, (err, depositReference) => {
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
@@ -219,8 +221,14 @@ const payments = {
             }
 
             if(!depositReference) {
-              payments.insertDepositReference(token.user, (err, depositReference) => {
-                depositDetails.reference = depositReference.reference
+              payments.insertDepositReference(token.user, (err, newDepositReference) => {
+                if(err) {
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': err }
+                  return next(null, req, res, next)
+                }
+
+                depositDetails.reference = newDepositReference.reference
                 depositDetails.amount = data.amount
 
                 res.status(205)
@@ -277,7 +285,7 @@ const payments = {
   insertDepositReference(user, callback) {
     const reference = encryption.generateRandomString(8)
 
-    db.oneOrNone('select * from deposit_references where reference = $1;', [ref])
+    db.oneOrNone('select * from deposit_references where reference = $1;', [reference])
     .then((ref) => {
       if(!ref) {
         db.oneOrNone('insert into deposit_references (uuid, user_uuid, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, reference;', [user.uuid, reference])
@@ -298,6 +306,7 @@ const payments = {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = payments.validateWithdraw(data)
+      console.log(data)
       if(validation !== true) {
         res.status(400)
         res.body = { 'status': 400, 'success': false, 'result': validation }
@@ -306,6 +315,7 @@ const payments = {
 
       const token = encryption.decodeToken(req, res)
       payments.getUserDetails(token.user, (err, userDetails) => {
+        console.log(userDetails)
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -319,6 +329,7 @@ const payments = {
         }
 
         payments.getBankAccount(data, (err, bankAccount) => {
+          console.log(bankAccount)
           if(err) {
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
@@ -331,11 +342,11 @@ const payments = {
             return next(null, req, res, next)
           }
 
-          if(!bankAccount.kyc_approved) {
-            res.status(400)
-            res.body = { 'status': 400, 'success': false, 'result': 'Bank account is not KYC approved' }
-            return next(null, req, res, next)
-          }
+          // if(!bankAccount.kyc_approved) {
+          //   res.status(400)
+          //   res.body = { 'status': 400, 'success': false, 'result': 'Bank account is not KYC approved' }
+          //   return next(null, req, res, next)
+          // }
 
           // add a balance check
 
@@ -393,7 +404,7 @@ const payments = {
   },
 
   getBankAccount(data, callback) {
-    db.oneOrNone('select * from banks where uuid = $1;',
+    db.oneOrNone('select * from bank_accounts where uuid = $1;',
     [data.bank_account_uuid])
     .then((bankAccount) => {
       callback(null, bankAccount)
@@ -402,12 +413,13 @@ const payments = {
   },
 
   insertWithdrawal(user, data, callback) {
-    db.none('insert into withdrawals (uuid, user_uuid, bank_account_uuid, amount, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid;',
+    db.oneOrNone('insert into withdrawals (uuid, user_uuid, bank_account_uuid, amount, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid;',
     [user.uuid, data.bank_account_uuid, data.amount, data.reference])
     .then((withdrawal) => {
+      callback(null, withdrawal)
 
       //just inserting into transactions for now
-      db.oneOrNone('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
+      db.none('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
       [user.uuid, data.reference, data.amount, withdrawal.uuid, 'Withdrawal'])
       .then(() => {})
       .catch((err) => { console.log(err) })

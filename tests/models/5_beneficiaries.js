@@ -81,7 +81,7 @@ describe('POST /api/v1/createBeneficiary', function () {
 
     const createBeneficiaryPayload2 = helper.encrypt({
       name: data.beneficiary.firstname+' '+data.beneficiary.lastname,
-      reference: data.beneficiary.firstname+' '+data.beneficiary.lastname+' Account',
+      reference: data.firstname+' '+data.lastname+' Payment',
       mobile_number: data.beneficiary.mobileNumber,
       email_address: data.beneficiary.emailAddress,
       account_address: data.beneficiary.accountAddress
