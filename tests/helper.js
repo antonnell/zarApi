@@ -13,7 +13,9 @@ const userDetails = {
   mobileNumber: '+27849411359',
   emailAddress: 'johndoe@gmail.com',
   password: '123123123',
+  newPassword: '456456456',
   pin: '123123',
+  newPin: '456456',
   bankAccount: {
     bank: 'ABSA',
     accountType: 'Savings',

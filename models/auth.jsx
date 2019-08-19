@@ -1,7 +1,8 @@
 const {
   db,
   encryption,
-  otpHelper
+  otpHelper,
+  sms
 } = require('../helpers');
 
 
@@ -151,9 +152,82 @@ const auth = {
     .catch(callback)
   },
 
+  verifyResetPassword(req, res, next) {
+    encryption.descryptPayload(req, res, next, (data) => {
+      const validation = auth.validateVerifyResetPassword(data)
+      if(validation !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': validation }
+        return next(null, req, res, next)
+      }
+
+      auth.selectOTP(data, (err, otpDetails) => {
+        if(err) {
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        if(!otpDetails) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Invalid OTP' }
+          return next(null, req, res, next)
+        }
+        //
+        // if(!otpHelper.validateOTP(data.pin)) {
+        //   res.status(400)
+        //   res.body = { 'status': 400, 'success': false, 'result': 'Invalid OTP' }
+        //   return next(null, req, res, next)
+        // }
+
+        auth.updateOTPValidated(otpDetails.uuid, (err) => {
+          if(err) {
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': otpDetails.uuid }
+          return next(null, req, res, next)
+        })
+      })
+    })
+  },
+
+  validateVerifyResetPassword(data) {
+    const {
+      mobile_number,
+      pin
+    } = data
+
+    if(!pin) {
+      return 'pin is required'
+    }
+
+    if(!mobile_number) {
+      return 'mobile_number is required'
+    }
+
+    return true
+  },
+
+  selectOTP(data, callback) {
+    db.oneOrNone('select * from otp where user_uuid = (select uuid from users where mobile_number = $1) and token = $2;', [data.mobile_number, data.pin])
+    .then((otpDetails) => {
+      callback(null, otpDetails)
+    })
+    .catch(callback)
+  },
+
+  updateOTPValidated(otpUUID, callback) {
+    db.none('update otp set validated = true, validated_time = now(), modified = now() where uuid = $1', [otpUUID])
+    .then(callback)
+    .catch(callback)
+  },
+
   setPassword(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
-
       const validation = auth.validateSetPassword(data)
       if(validation !== true) {
         res.status(400)
@@ -169,12 +243,12 @@ const auth = {
         }
 
         if(!validationRequest || validationRequest.validated !== true) {
-          res.status(204)
+          res.status(400)
           res.body = { 'status': 400, 'success': false, 'result': 'Invalid authentication' }
           return next(null, req, res, next)
         }
 
-        const password = encryption.saltPassword(data.password)
+        const password = encryption.saltPassword(data.new_password)
         auth.updatePassword(password, validationRequest, (err) => {
           if(err) {
             res.status(500)
@@ -208,15 +282,15 @@ const auth = {
   },
 
   selectValidationRequest(uuid, callback) {
-    db.oneOrNone('select * otp where uuid = $1', [uuid])
-    .then((otp) => {
-      callback(null, otp)
+    db.oneOrNone('select * from otp where uuid = $1', [uuid])
+    .then((something) => {
+      callback(null, something)
     })
     .catch(callback)
   },
 
   updatePassword(password, validationRequest, callback) {
-    db.none('update user_passwords set password=$2, salt=$3 where uuid = $1;', [validationRequest.user_uuid, password.passwordHash, password.salt])
+    db.none('update user_passwords set password=$2, salt=$3 where user_uuid = $1;', [validationRequest.user_uuid, password.passwordHash, password.salt])
     .then(callback)
     .catch(callback)
   },

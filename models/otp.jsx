@@ -74,7 +74,6 @@ const otp = {
 
   verifyOTP(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
-      console.log(data)
       const validation = otp.validateVerifyOTP(data)
       if(validation !== true) {
         res.status(400)
@@ -83,7 +82,6 @@ const otp = {
       }
 
       const token = encryption.decodeToken(req, res)
-      console.log(token)
       otp.selectOTP(token.user, data.pin, (err, otpDetails) => {
         if(err) {
           res.status(500)

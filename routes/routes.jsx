@@ -26,6 +26,7 @@ router.post('/api/v1/testEncryption', bodyParser.json(), testing.testEncryption)
 router.post('/api/v1/login', bodyParser.json(), auth.login)
 router.post('/api/v1/register', bodyParser.json(), auth.register)
 router.post('/api/v1/resetPassword', bodyParser.json(), auth.requestResetPassword)
+router.post('/api/v1/verifyResetPassword', bodyParser.json(), auth.verifyResetPassword)
 router.post('/api/v1/setPassword', bodyParser.json(), auth.setPassword)
 
 router.post('/api/v1/getAccounts', validateRequest, bodyParser.json(), accounts.getAccounts)
