@@ -7,6 +7,8 @@ const Otp = require('./otp.jsx');
 const Payments = require('./payments.jsx');
 const Users = require('./users.jsx');
 const Testing = require('./testing.jsx');
+const Asset = require('./asset.jsx');
+const Swap = require('./swap.jsx');
 
 const models = {
   accounts: Accounts,
@@ -17,7 +19,9 @@ const models = {
   otp: Otp,
   payments: Payments,
   users: Users,
-  testing: Testing
+  testing: Testing,
+  asset: Asset,
+  swap: Swap
 }
 
 module.exports = models
