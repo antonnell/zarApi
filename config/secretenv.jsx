@@ -1,3 +1,3 @@
 module.exports = function() {
-  return process.env.SECRET
+  return process.env.ZAR_SECRET
 }

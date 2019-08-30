@@ -1,12 +1,12 @@
 const config = {
-  host: process.env.HOST,
-  database: process.env.DATABASE,
-  user: process.env.USER,
-  password: process.env.PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 
-  encrKey: process.env.KEY,
-  zarApi: process.env.API,
-  secret: process.env.SECRET,
+  encrKey: process.env.ZAR_KEY,
+  zarApi: process.env.ZAR_API,
+  secret: process.env.ZAR_SECRET,
 
 }
 
