@@ -21,6 +21,7 @@ const auth = {
 
       auth.getUserDetails(data.mobile_number, data.email_address, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -94,6 +95,7 @@ const auth = {
 
       auth.getUserDetails(data.mobile_number, null, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -113,6 +115,7 @@ const auth = {
 
             auth.updateOTPSent(otpUUID, (err) => {
               if(err) {
+                console.log(err)
                 res.status(500)
                 res.body = { 'status': 500, 'success': false, 'result': err }
                 return next(null, req, res, next)
@@ -166,6 +169,7 @@ const auth = {
 
       auth.selectOTP(data, (err, otpDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -185,6 +189,7 @@ const auth = {
 
         auth.updateOTPValidated(otpDetails.uuid, (err) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
@@ -240,6 +245,7 @@ const auth = {
 
       auth.selectValidationRequest(data.validation_uuid, (err, validationRequest)=> {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -254,6 +260,7 @@ const auth = {
         const password = encryption.saltPassword(data.new_password)
         auth.updatePassword(password, validationRequest, (err) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
@@ -310,6 +317,7 @@ const auth = {
 
       auth.getUserDetails(data.mobile_number, null, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -325,6 +333,7 @@ const auth = {
 
         auth.insertUser(data, password, (err, userDetails) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
