@@ -3,6 +3,7 @@ const {
   encryption,
   zarNetwork
 } = require('../helpers');
+const async = require('async')
 
 const accounts = {
   createAccount(req, res, next) {
@@ -119,9 +120,23 @@ const accounts = {
         res.body = { 'status': 204, 'success': true, 'result': [] }
         return next(null, req, res, next)
       }
-      res.status(205)
-      res.body = { 'status': 200, 'success': true, 'result': accounts }
-      return next(null, req, res, next)
+
+      async.map(accounts, (account, callback) => {
+        zarNetwork.getBalances(account.address, (err, balances) => {
+          account.balances = balances
+          callback(err, account)
+        })
+      }, (err, accounts) => {
+        if(err) {
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        res.status(205)
+        res.body = { 'status': 200, 'success': true, 'result': accounts }
+        return next(null, req, res, next)
+      })
     })
     .catch((err) => {
       res.status(500)

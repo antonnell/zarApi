@@ -39,10 +39,10 @@ function handleData(req, res) {
   res.set('Content-Type', 'application/json')
   res.setHeader('Content-Type', 'application/json')
 
-  if (res.statusCode === 205) {
+  if (res.statusCode === 205 || res.statusCode === 204) {
     if (res.body) {
       if (res.body.length === 0) {
-        res.status(204)
+        res.status(200)
         res.json({
           'status': 204,
           'result': 'No Content'
@@ -52,7 +52,7 @@ function handleData(req, res) {
         res.json(res.body)
       }
     } else {
-      res.status(204)
+      res.status(200)
       res.json({
         'status': 204,
         'result': 'No Content'

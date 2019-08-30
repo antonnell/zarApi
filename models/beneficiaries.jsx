@@ -16,6 +16,7 @@ const beneficiaries = {
 
       beneficiaries.getUserDetails(data, (err, userDetails) => {
         if(err) {
+          console.log(err)
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
@@ -38,6 +39,7 @@ const beneficiaries = {
         const token = encryption.decodeToken(req, res)
         beneficiaries.insertBeneficiary(token.user, data, userDetails[0], (err, beneficiary) => {
           if(err) {
+            console.log(err)
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
@@ -76,7 +78,7 @@ const beneficiaries = {
   },
 
   getUserDetails(data, callback) {
-    db.manyOrNone('select u.* from users u left join accounts a on a.user_uuid = u.uuid where u.email_address = $1 or u.mobile_number = $2 or (a.address = $3 and u.email_address != $1 and u.mobile_number != $2);',
+    db.manyOrNone('select u.*, a.address from users u left join accounts a on a.user_uuid = u.uuid where u.email_address = $1 or u.mobile_number = $2 or (a.address = $3 and u.email_address != $1 and u.mobile_number != $2);',
     [data.email_address, data.mobile_number, data.account_address])
     .then((users) => {
       callback(null, users)
@@ -86,7 +88,7 @@ const beneficiaries = {
 
   insertBeneficiary(user, data, beneficiaryUser, callback) {
     db.oneOrNone('insert into beneficiaries (uuid, user_uuid, beneficiary_user_uuid, name, mobile_number, email_address, account_address, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning uuid, name, mobile_number, email_address, account_address, reference;',
-    [user.uuid, beneficiaryUser.uuid, data.name, data.mobile_number, data.email_address, data.account_address, data.reference])
+    [user.uuid, beneficiaryUser.uuid, data.name, beneficiaryUser.mobile_number, beneficiaryUser.email_address, beneficiaryUser.address, data.reference])
     .then((beneficiary) => {
       callback(null, beneficiary)
     })

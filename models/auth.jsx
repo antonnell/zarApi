@@ -4,6 +4,7 @@ const {
   otpHelper,
   sms
 } = require('../helpers');
+const accounts = require('./accounts.jsx')
 
 
 const auth = {
@@ -18,7 +19,7 @@ const auth = {
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, data.email_address, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -54,15 +55,17 @@ const auth = {
   },
 
   validateLogin(data) {
-
     const {
       mobile_number,
+      email_address,
       password
     } = data
 
-    if(!mobile_number) {
-      return 'mobile_number is required'
+    if(!mobile_number && !email_address) {
+      return 'mobile_number or email_address is required'
     }
+
+    //add email and mobile number validation
 
     if(!password) {
       return 'password is required'
@@ -71,8 +74,8 @@ const auth = {
     return true
   },
 
-  getUserDetails(mobileNumber, callback) {
-    db.oneOrNone('select u.uuid, u.firstname, u.lastname, u.mobile_number, u.email_address, up.password, up.salt from users u left join user_passwords up on u.uuid = up.user_uuid where mobile_number = $1;', [mobileNumber])
+  getUserDetails(mobileNumber, emailAddress, callback) {
+    db.oneOrNone('select u.uuid, u.firstname, u.lastname, u.mobile_number, u.email_address, up.password, up.salt from users u left join user_passwords up on u.uuid = up.user_uuid where mobile_number = $1 or email_address = $2 order by u.created desc limit 1;', [mobileNumber, emailAddress])
     .then((userDetails) => {
       callback(null, userDetails)
     })
@@ -89,7 +92,7 @@ const auth = {
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, null, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -305,7 +308,7 @@ const auth = {
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(data.mobile_number, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, null, (err, userDetails) => {
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }

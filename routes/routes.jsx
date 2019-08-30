@@ -14,6 +14,7 @@ const {
   payments,
   testing,
   token,
+  asset,
   swap
 } = require('../models')
 
@@ -55,6 +56,7 @@ router.post('/api/v1/getTransactions', validateRequest, bodyParser.json(), payme
 router.post('/api/v1/setPin', validateRequest, bodyParser.json(), users.setPin)
 router.post('/api/v1/updateName', validateRequest, bodyParser.json(), users.updateName)
 
+router.post('/api/v1/getAssets', validateRequest, bodyParser.json(), asset.getAssets)
 router.post('/api/v1/issueAsset', validateRequest, bodyParser.json(), asset.issueAsset)
 router.post('/api/v1/mintAsset', validateRequest, bodyParser.json(), asset.mintAsset)
 router.post('/api/v1/burnAsset', validateRequest, bodyParser.json(), asset.burnAsset)

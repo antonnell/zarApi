@@ -1,6 +1,7 @@
 const {
   db,
   encryption,
+  zarNetwork
 } = require('../helpers');
 const async = require('async')
 
@@ -9,7 +10,7 @@ const payments = {
 
   getTransactions(req, res, next) {
     const token = encryption.decodeToken(req, res)
-    db.manyOrNone("select uuid, reference, amount, type, created from transactions where user_uuid = $1 order by created desc;", [token.user.uuid])
+    db.manyOrNone("select t.uuid, t.reference, t.amount, t.type, t.created, a.symbol from transactions t left join payments p on t.source_uuid = p.uuid left join assets a on a.asset_id = p.asset_id where t.user_uuid = $1 order by t.created desc;", [token.user.uuid])
     .then((transactions) => {
       if(!transactions) {
         res.status(204)
@@ -40,6 +41,7 @@ const payments = {
 
       const token = encryption.decodeToken(req, res)
       payments.getUserDetails(token.user, (err, userDetails) => {
+        console.log(userDetails)
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -52,36 +54,37 @@ const payments = {
           return next(null, req, res, next)
         }
 
-        payments.getAccount(data, (err, account) => {
+        payments.getAccount(data, (err, accountDetails) => {
+          console.log(accountDetails)
           if(err) {
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
             return next(null, req, res, next)
           }
 
-          if(!account) {
+          if(!accountDetails) {
             res.status(400)
-            res.body = { 'status': 400, 'success': false, 'result': 'No matching bank record found' }
+            res.body = { 'status': 400, 'success': false, 'result': 'No matching account record found' }
             return next(null, req, res, next)
           }
 
-          payments.getBeneficiary(data, (err, beneficiary) => {
+          payments.getBeneficiary(data, (err, beneficiaryDetails) => {
+            console.log(beneficiaryDetails)
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
             }
 
-            if(!beneficiary) {
+            if(!beneficiaryDetails) {
               res.status(400)
               res.body = { 'status': 400, 'success': false, 'result': 'No matching beneficiary record found' }
               return next(null, req, res, next)
             }
 
-            // do the payments transfer (bnb or eth I guess based on the account_type)
-
             payments.insertPayment(token.user, data, (err, payment) => {
               if(err) {
+                console.log(err)
                 res.status(500)
                 res.body = { 'status': 500, 'success': false, 'result': err }
                 return next(null, req, res, next)
@@ -95,9 +98,19 @@ const payments = {
                   return next(null, req, res, next)
                 }
 
-                res.status(205)
-                res.body = { 'status': 200, 'success': true, 'result': 'Payment processed' }
-                return next(null, req, res, next)
+                //real-time processing the request
+                payments.processPayment(data, accountDetails, payment, beneficiaryDetails, (err, processResult) => {
+                  if(err) {
+                    console.log(err)
+                    res.status(500)
+                    res.body = { 'status': 500, 'success': false, 'result': err }
+                    return next(null, req, res, next)
+                  }
+
+                  res.status(205)
+                  res.body = { 'status': 200, 'success': true, 'result': 'Payment processed' }
+                  return next(null, req, res, next)
+                })
               })
             })
           })
@@ -111,7 +124,8 @@ const payments = {
       account_uuid,
       beneficiary_uuid,
       amount,
-      reference
+      reference,
+      asset_id
     } = data
 
     if(!account_uuid) {
@@ -134,6 +148,10 @@ const payments = {
       return 'reference is required'
     }
 
+    if(!asset_id) {
+      return 'asset_id is required'
+    }
+
     return true
   },
 
@@ -147,7 +165,7 @@ const payments = {
   },
 
   getBeneficiary(data, callback) {
-    db.oneOrNone('select * from beneficiaries where uuid = $1;',
+    db.oneOrNone('select * from beneficiaries b left join accounts a on a.user_uuid = b.beneficiary_user_uuid where b.uuid = $1;',
     [data.beneficiary_uuid])
     .then((beneficiary) => {
       callback(null, beneficiary)
@@ -156,8 +174,8 @@ const payments = {
   },
 
   insertPayment(user, data, callback) {
-    db.oneOrNone('insert into payments (uuid, user_uuid, account_uuid, beneficiary_uuid, amount, reference, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid;',
-    [user.uuid, data.account_uuid, data.beneficiary_uuid, data.amount, data.reference])
+    db.oneOrNone('insert into payments (uuid, user_uuid, account_uuid, beneficiary_uuid, amount, reference, asset_id, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid;',
+    [user.uuid, data.account_uuid, data.beneficiary_uuid, data.amount, data.reference, data.asset_id])
     .then((payment) => {
       callback(null, payment)
 
@@ -167,6 +185,21 @@ const payments = {
       .then(() => {})
       .catch((err) => { console.log(err) })
     })
+    .catch(callback)
+  },
+
+  processPayment(data, accountDetails, payment, beneficiary, callback) {
+
+    const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
+
+    zarNetwork.transfer(data, beneficiary, privateKey, accountDetails.address, (err, processResult) => {
+      payments.updatePaymentProcessed(payment, processResult, callback)
+    })
+  },
+
+  updatePaymentProcessed(payment, result, callback) {
+    db.none('update payments set processed = true, processed_time = now(), processed_result = $2 where uuid = $1', [payment.uuid, result])
+    .then(callback)
     .catch(callback)
   },
 

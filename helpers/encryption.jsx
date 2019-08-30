@@ -156,6 +156,13 @@ const encryption = {
     }
   },
 
+  unhashAccountField(phrase, dbPassword) {
+    const password = config.encr_key+':'+dbPassword
+    const decrypted = encryption.decrypt(phrase, password)
+
+    return decrypted
+  },
+
   genPassword() {
     return generator.generate({
       length: 20,

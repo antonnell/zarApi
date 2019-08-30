@@ -35,11 +35,11 @@ create table accounts (
 	user_uuid char(36),
 	name varchar(128),
 	address varchar(60),
-	private_key varchar(60),
+	private_key text,
 	mnemonic text,
 	password text,
 	encr_key text,
-	account_type char(36),
+	account_type varchar(36),
 	created timestamp(6)
 );
 
@@ -51,7 +51,7 @@ create table beneficiaries (
 	name varchar(128),
 	mobile_number varchar(20),
 	email_address varchar(128),
-	account_address varchar(32),
+	account_address varchar(64),
 	reference varchar(128),
 	created timestamp(6)
 );
@@ -146,7 +146,11 @@ create table payments (
 	account_uuid char(36),
 	beneficiary_uuid char(36),
 	amount numeric,
+	asset_id char(14),
 	reference varchar(128),
+	processed boolean,
+	processed_time timestamp(6),
+	processed_result text,
 	created timestamp(6)
 );
 
@@ -216,6 +220,55 @@ create table transactions (
 	type varchar(50),
 	created timestamp(6)
 );
+
+drop table if exists assets;
+create table assets (
+	uuid char(36) primary key,
+	user_uuid char(36),
+	name varchar(50),
+	symbol varchar(6),
+	total_supply varchar(50),
+	minting_address_uuid char(36),
+	mintable boolean,
+	owner_burnable boolean,
+	holder_burnable boolean,
+	from_burnable boolean,
+	freezable boolean,
+	issued boolean,
+	issue_response text,
+	asset_id char(14),
+	created timestamp(6),
+	modified timestamp(6)
+);
+
+drop table if exists mint_requests;
+create table mint_requests (
+	uuid char(36) primary key,
+	user_uuid char(36),
+	asset_uuid char(36),
+	amount numeric,
+	recipient_address varchar(64),
+	processed boolean,
+	processed_time timestamp(6),
+	processed_result text,
+	created timestamp(6),
+	modified timestamp(6)
+);
+
+drop table if exists burn_requests;
+create table burn_requests (
+	uuid char(36) primary key,
+	user_uuid char(36),
+	asset_uuid char(36),
+	amount numeric,
+	recipient_address varchar(64),
+	processed boolean,
+	processed_time timestamp(6),
+	processed_result text,
+	created timestamp(6),
+	modified timestamp(6)
+);
+
 
 
 insert into banks (uuid, name, branch_code, created) values
