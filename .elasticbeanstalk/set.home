@@ -1,0 +1,10 @@
+files:
+  "/opt/elasticbeanstalk/hooks/appdeploy/pre/05set_home_env.sh" :
+    mode: "000775"
+    owner: root
+    group: root
+    source: |
+      #!/usr/bin/env bash
+      . /opt/elasticbeanstalk/support/envvars
+      export HOME=/home/user-ec2
+      echo "Set home user ec2"
