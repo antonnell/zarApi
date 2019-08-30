@@ -99,7 +99,7 @@ const encryption = {
     var token = jwt.encode({
       exp: expires,
       user: user
-    }, require('../config/secret.jsx')())
+    }, require('../config/secretenv.jsx')())
     return {
       token: token,
       expires: expires
@@ -116,7 +116,7 @@ const encryption = {
     var key = (req.body && req.body.x_key) || (req.query && req.query.x_key) || req.headers['x-key']
     if (token || key) {
       try {
-        var decoded = jwt.decode(token, require('../config/secret.jsx')())
+        var decoded = jwt.decode(token, require('../config/secretenv.jsx')())
         return decoded
       } catch (err) {
         res.status(500)

@@ -1,5 +1,5 @@
 const otplib = require('otplib');
-const secret = require('../config/secret.jsx')()
+const secret = require('../config/secretenv.jsx')()
 
 const otp = {
 
