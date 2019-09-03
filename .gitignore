@@ -6,4 +6,5 @@ node_modules/
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.config
 !.elasticbeanstalk/*.global.yml
