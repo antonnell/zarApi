@@ -3,9 +3,9 @@ const {
 } = require('../helpers');
 
 const testing = {
-  doNothing(req, res, next) {
+  test(req, res, next) {
     res.status(205)
-    res.body = { 'status': 200, 'success': true, 'result': 'Nothing happened' }
+    res.body = { 'status': 200, 'success': true, 'result': 'Test returned' }
     return next(null, req, res, next)
   },
 

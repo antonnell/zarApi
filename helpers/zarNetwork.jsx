@@ -1,8 +1,10 @@
 const axios = require('axios');
 const config = require('../config')
 const httpClient = axios.create({ baseURL: config.zarApi });
+const sleep = require('../helpers/sleep.jsx');
 
 const ZarClient = require('@zar-network/javascript-sdk')
+const crypto = require('@zar-network/javascript-sdk').crypto
 
 const zar = {
   async getClient(privateKey) {
@@ -26,8 +28,10 @@ const zar = {
 
   async issue(data, accountDetails, privateKey, callback) {
     try {
+      console.log(privateKey)
       const client = await this.getClient(privateKey)
-      const res = await client.tokens.issue(accountDetails.address, data.name, data.symbol, data.total_supply, data.mintable)
+      console.log(client)
+      const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable)
 
       console.log('***RESPONSE***')
       console.log(res)
@@ -40,43 +44,27 @@ const zar = {
     }
   },
 
-  async mint(data, assetDetails, privateKey, address, callback) {
+  async mint(data, assetDetails, privateKey, fromAddress, toAddress, callback) {
     try {
 
-      console.log(address, assetDetails.asset_id, data.amount)
+      console.log(fromAddress, assetDetails.asset_id, data.amount, toAddress)
       console.log(privateKey)
 
       const client = await this.getClient(privateKey)
-      const res = await client.tokens.mint(address, assetDetails.asset_id, data.amount)
+      const res = await client.mint(fromAddress, assetDetails.asset_id, data.amount, toAddress)
 
       console.log('***RESPONSE***')
       console.log(res)
       console.log('***RESPONSE***')
 
-      if(data.address != address) {
-
-        //call the transfer
-        const transferData = {
-          amount: data.amount,
-          asset_id: assetDetails.asset_id,
-          reference: 'Mint Asset'
-        }
-        const beneficiary = {
-          address: data.address
-        }
-
-        zar.transfer(transferData, beneficiary, privateKey, address, callback)
-
-      } else {
-        callback(null, res)
-      }
+      callback(null, res)
     } catch(e) {
       console.log(e.toString())
       callback(e.toString())
     }
   },
 
-  getTransaction(txId, callback) {
+  async getTransactionDetails(txId, callback) {
     const url = `${config.zarApi}/txs/${txId}`;
 
     httpClient
@@ -87,7 +75,47 @@ const zar = {
       .catch((error) => {
         callback(error)
       });
+  },
 
+  async getTransaction(txId) {
+    const url = `${config.zarApi}/txs/${txId}`;
+
+    try {
+      console.log(`calling ${url}`)
+      const apiRes = await axios.get(url);
+      return apiRes.data
+    } catch (err) {
+      if(err.response && err.response.status && err.response.status == 404) {
+        return err.response.data
+      } else {
+        return null
+      }
+    }
+  },
+
+  async verifyTransactionSuccess(txId, callback) {
+    let retries = 10
+    let response = null;
+
+    while(retries > 0) {
+      const transactionDetails = await zar.getTransaction(txId)
+
+      console.log(transactionDetails)
+      if(transactionDetails.error) {
+        response = transactionDetails
+        await sleep(1000)
+      } else if(transactionDetails.logs[0].success) {
+        const succ = transactionDetails.logs[0].success
+        if(succ) {
+          response = transactionDetails
+          break;
+        }
+      }
+
+      retries--
+    }
+
+    callback(null, response)
   },
 
   async burn(data, assetDetails, privateKey, address, callback) {
@@ -97,7 +125,7 @@ const zar = {
       console.log('PRIVATE KEY: '+privateKey)
 
       const client = await this.getClient(privateKey)
-      const res = await client.tokens.burn(address, assetDetails.asset_id, data.amount)
+      const res = await client.burn(address, assetDetails.asset_id, data.amount)
 
       console.log('***RESPONSE***')
       console.log(res)

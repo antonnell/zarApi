@@ -23,7 +23,7 @@ router.get('/', function (req, res, next) {
   next(null, req, res, next)
 })
 
-router.post('/api/v1/doNothing', bodyParser.json(), testing.doNothing)
+router.post('/api/v1/test', bodyParser.json(), testing.test)
 router.post('/api/v1/testEncryption', bodyParser.json(), testing.testEncryption)
 
 router.post('/api/v1/login', bodyParser.json(), auth.login)

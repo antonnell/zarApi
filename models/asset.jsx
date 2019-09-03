@@ -10,6 +10,12 @@ const asset = {
     const token = encryption.decodeToken(req, res)
 
     zarNetwork.getIssueList((err, issueList) => {
+      if(err) {
+        res.status(500)
+        res.body = { 'status': 500, 'success': false, 'result': err }
+        return next(null, req, res, next)
+      }
+
       db.manyOrNone('select uuid, user_uuid, asset_id from assets where issued is true;', [token.user.uuid])
       .then((assets) => {
         if(!issueList || issueList.result.length === 0) {
@@ -27,6 +33,26 @@ const asset = {
           return issue
         })
 
+        //add fantom token
+        issueList.push({
+          burn_from_disabled: false,
+          burn_holder_disabled: false,
+          burn_owner_disabled: false,
+          freeze_disabled: false,
+          minting_finished: false,
+          decimals: "18",
+          description: "",
+          issue_id: "ftm",
+          issue_time: "1567416346",
+          issuer: "",
+          name: "Fantom",
+          owner: "",
+          symbol: "FTM",
+          total_supply: "10000000",
+          user_uuid: "fantomuuid",
+          uuid: "fantomuuid",
+        })
+
         res.status(205)
         res.body = { 'status': 200, 'success': true, 'result': issueList }
         return next(null, req, res, next)
@@ -39,7 +65,7 @@ const asset = {
     })
   },
 
-  issueAsset(req, res, next) {
+  async issueAsset(req, res, next) {
     encryption.descryptPayload(req, res, next, (data) => {
 
       const validation = asset.validateIssue(data)
@@ -51,6 +77,7 @@ const asset = {
 
       const token = encryption.decodeToken(req, res)
 
+      console.log(data.minting_address)
       asset.getAccountDetails(data.minting_address, (err, accountDetails) => {
         if(err) {
           res.status(500)
@@ -92,21 +119,9 @@ const asset = {
               console.log(ex)
             }
 
-            zarNetwork.getTransaction(txId, (err, transactionDetails) => {
-              if(err) {
-                res.status(500)
-                res.body = { 'status': 500, 'success': false, 'result': err }
-                return next(null, req, res, next)
-              }
+            if(success) {
 
-              let issueId = null
-              try {
-                issueId = transactionDetails.events[0].attributes.filter((att) => { return att.key === 'issue-id'})[0].value
-              } catch(ex) {
-                console.log(ex)
-              }
-
-              asset.updateAsset(assetDetails, issueResponse, success, issueId, (err) => {
+              zarNetwork.verifyTransactionSuccess(txId, (err, transactionDetails) => {
                 if(err) {
                   console.log(err)
                   res.status(500)
@@ -114,11 +129,55 @@ const asset = {
                   return next(null, req, res, next)
                 }
 
-                res.status(205)
-                res.body = { 'status': 200, 'success': success, 'result': txId }
-                return next(null, req, res, next)
+                let issueId = null
+                let issueSuccess = null
+                let issueError = null
+                try {
+                  issueError = transactionDetails.error
+
+                  if(issueError) {
+                    res.status(400)
+                    res.body = { 'status': 400, 'success': false, 'result': issueError }
+                    return next(null, req, res, next)
+                  }
+
+                  issueSuccess = transactionDetails.logs[0].success
+                  if(issueSuccess) {
+                    issueId = transactionDetails.events[0].attributes.filter((att) => { return att.key === 'issue-id'})[0].value
+                  } else {
+                    issueError = JSON.parse(transactionDetails.logs[0].log).message
+
+                    res.status(400)
+                    res.body = { 'status': 400, 'success': false, 'result': issueError }
+                    return next(null, req, res, next)
+                  }
+                } catch(ex) {
+                  console.log(ex)
+
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': ex }
+                  return next(null, req, res, next)
+                }
+
+                asset.updateAsset(assetDetails, issueResponse, issueSuccess, issueId, (err) => {
+                  if(err) {
+                    console.log(err)
+                    res.status(500)
+                    res.body = { 'status': 500, 'success': false, 'result': err }
+                    return next(null, req, res, next)
+                  }
+
+                  res.status(205)
+                  res.body = { 'status': 200, 'success': issueSuccess, 'result': txId }
+                  return next(null, req, res, next)
+                })
               })
-            })
+
+            } else {
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': 'Sending transaction failed' }
+              return next(null, req, res, next)
+            }
           })
         })
       })
@@ -221,43 +280,97 @@ const asset = {
             return next(null, req, res, next)
           }
 
-          asset.insertMint(token.user, data, assetDetails, (err, mintRequest) => {
-            console.log(mintRequest)
+          asset.getRecipientAddress(data, (err, recipientAddress) => {
+            console.log(recipientAddress)
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
             }
 
-            const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
-
-            zarNetwork.mint(data, assetDetails, privateKey, accountDetails.address, (err, mintResponse) => {
+            asset.insertMint(token.user, data, assetDetails, recipientAddress, (err, mintRequest) => {
+              console.log(mintRequest)
               if(err) {
                 res.status(500)
                 res.body = { 'status': 500, 'success': false, 'result': err }
                 return next(null, req, res, next)
               }
 
-              //get success
-              let success = false
-              let txId = null
-              try {
-                success = mintResponse.result.logs[0].success
-                txId = mintResponse.result.txhash
-              } catch(ex) {
-                console.log(ex)
-              }
+              const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
 
-              asset.updateMintProcessed(mintRequest, mintResponse, (err) => {
+              zarNetwork.mint(data, assetDetails, privateKey, accountDetails.address, recipientAddress.address, (err, mintResponse) => {
                 if(err) {
                   res.status(500)
                   res.body = { 'status': 500, 'success': false, 'result': err }
                   return next(null, req, res, next)
                 }
 
-                res.status(205)
-                res.body = { 'status': 200, 'success': success, 'result': txId }
-                return next(null, req, res, next)
+                //get success
+                let success = false
+                let txId = null
+                try {
+                  success = mintResponse.result.logs[0].success
+                  txId = mintResponse.result.txhash
+                } catch(ex) {
+                  console.log(ex)
+                }
+
+                if(success) {
+
+                  zarNetwork.verifyTransactionSuccess(txId, (err, transactionDetails) => {
+                    if(err) {
+                      console.log(err)
+                      res.status(500)
+                      res.body = { 'status': 500, 'success': false, 'result': err }
+                      return next(null, req, res, next)
+                    }
+
+                    let mintSuccess = null
+                    let mintError = null
+                    try {
+                      mintError = transactionDetails.error
+
+                      if(mintError) {
+                        res.status(400)
+                        res.body = { 'status': 400, 'success': false, 'result': mintError }
+                        return next(null, req, res, next)
+                      }
+
+                      mintSuccess = transactionDetails.logs[0].success
+                      if(!mintSuccess) {
+                        mintError = JSON.parse(transactionDetails.logs[0].log).message
+
+                        res.status(400)
+                        res.body = { 'status': 400, 'success': false, 'result': mintError }
+                        return next(null, req, res, next)
+                      }
+                    } catch(ex) {
+                      console.log(ex)
+
+                      res.status(500)
+                      res.body = { 'status': 500, 'success': false, 'result': ex }
+                      return next(null, req, res, next)
+                    }
+
+                    asset.updateMintProcessed(mintRequest, mintResponse, (err) => {
+                      if(err) {
+                        res.status(500)
+                        res.body = { 'status': 500, 'success': false, 'result': err }
+                        return next(null, req, res, next)
+                      }
+
+                      res.status(205)
+                      res.body = { 'status': 200, 'success': success, 'result': txId }
+                      return next(null, req, res, next)
+                    })
+
+                  })
+                } else {
+                  console.log(mintResponse)
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': mintResponse }
+                  return next(null, req, res, next)
+                }
               })
             })
           })
@@ -269,20 +382,22 @@ const asset = {
   validateMint(data) {
     const {
       asset_uuid,
+      amount,
       address,
-      amount
+      beneficiary_uuid,
+      own_account_uuid
     } = data
 
     if(!asset_uuid) {
       return 'asset_uuid is required'
     }
 
-    if(!address) {
-      return 'address is required'
-    }
-
     if(!amount) {
       return 'amount is required'
+    }
+
+    if(!address && !beneficiary_uuid && !own_account_uuid) {
+      return 'identifier is required'
     }
 
     return true
@@ -304,9 +419,34 @@ const asset = {
     .catch(callback)
   },
 
-  insertMint(user, data, assetDetails, callback) {
-    db.oneOrNone('insert into mint_requests (uuid, user_uuid, asset_uuid, amount, recipient_address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid',
-    [user.uuid, assetDetails.uuid, data.amount, data.address])
+  getRecipientAddress(data, callback) {
+    if(data.recipient_type == 'public') {
+      return callback(null, { address:  data.address })
+    }
+
+    if(data.recipient_type == 'beneficiary') {
+      db.oneOrNone('select a.address from beneficiaries b left join accounts a on b.beneficiary_user_uuid = a.user_uuid where b.uuid = $1;', [data.beneficiary_uuid])
+      .then((acc) => {
+        callback(null, acc)
+      })
+      .catch(callback)
+      return
+    }
+
+    if(data.recipient_type == 'own') {
+      db.oneOrNone('select address from accounts where uuid = $1;', [data.own_account_uuid])
+      .then((acc) => {
+        callback(null, acc)
+      })
+      .catch(callback)
+      return
+    }
+  },
+
+  insertMint(user, data, assetDetails, recipientAddress, callback) {
+
+    db.oneOrNone('insert into mint_requests (uuid, user_uuid, asset_uuid, amount, recipient_type, recipient_address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid',
+    [user.uuid, assetDetails.uuid, data.amount, data.recipient_type, recipientAddress.address])
     .then((mintRequest) => {
       callback(null, mintRequest)
     })
