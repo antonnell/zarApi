@@ -10,7 +10,13 @@ const payments = {
 
   getTransactions(req, res, next) {
     const token = encryption.decodeToken(req, res)
-    db.manyOrNone("select t.uuid, t.reference, t.amount, t.type, t.created, a.symbol from transactions t left join payments p on t.source_uuid = p.uuid left join assets a on a.asset_id = p.asset_id where t.user_uuid = $1 order by t.created desc;", [token.user.uuid])
+    db.manyOrNone(`select * from (
+select p.uuid, p.user_uuid, p.amount, p.reference, a.symbol, p.created, 'Transfer' as type from payments p left join assets a on a.asset_id = p.asset_id where p.user_uuid = $1
+union
+select mr.uuid, mr.user_uuid, mr.amount, 'Mint Request', a.symbol, mr.created, 'Mint Asset' as type from mint_requests mr left join assets a on a.uuid = mr.asset_uuid where mr.user_uuid = $1
+union
+select br.uuid, br.user_uuid, br.amount, 'Burn Request', a.symbol, br.created, 'Burn Asset' as type from burn_requests br left join assets a on a.uuid = br.asset_uuid where br.user_uuid = $1) a
+order by created desc;`, [token.user.uuid])
     .then((transactions) => {
       if(!transactions) {
         res.status(204)
@@ -193,7 +199,54 @@ const payments = {
     const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
 
     zarNetwork.transfer(data, beneficiary, privateKey, accountDetails.address, (err, processResult) => {
-      payments.updatePaymentProcessed(payment, processResult, callback)
+      if(err) {
+        return callback(err)
+      }
+
+      //get success
+      let success = false
+      let txId = null
+      try {
+        success = processResult.result.logs[0].success
+        txId = processResult.result.txhash
+      } catch(ex) {
+        console.log(ex)
+      }
+
+      if(success) {
+
+        zarNetwork.verifyTransactionSuccess(txId, (err, transactionDetails) => {
+          if(err) {
+            return callback(err)
+          }
+
+          let transferSuccess = null
+          let transferError = null
+          try {
+            transferError = transactionDetails.error
+
+            if(transferError) {
+              res.status(400)
+              res.body = { 'status': 400, 'success': false, 'result': transferError }
+              return next(null, req, res, next)
+            }
+
+            transferSuccess = transactionDetails.logs[0].success
+            if(!transferSuccess) {
+              transferError = JSON.parse(transactionDetails.logs[0].log).message
+
+              return callback(transferError)
+            }
+
+          } catch(ex) {
+            return callback(ex)
+          }
+
+          payments.updatePaymentProcessed(payment, processResult, callback)
+        })
+      } else {
+        return callback(processResult)
+      }
     })
   },
 

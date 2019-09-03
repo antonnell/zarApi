@@ -77,7 +77,6 @@ const asset = {
 
       const token = encryption.decodeToken(req, res)
 
-      console.log(data.minting_address)
       asset.getAccountDetails(data.minting_address, (err, accountDetails) => {
         if(err) {
           res.status(500)
@@ -253,7 +252,6 @@ const asset = {
       const token = encryption.decodeToken(req, res)
 
       asset.getAccountDetailsForUser(token.user.uuid, (err, accountDetails) => {
-        console.log(accountDetails)
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -267,7 +265,6 @@ const asset = {
         }
 
         asset.getAssetDetails(data.asset_uuid, (err, assetDetails) => {
-          console.log(assetDetails)
           if(err) {
             res.status(500)
             res.body = { 'status': 500, 'success': false, 'result': err }
@@ -281,7 +278,6 @@ const asset = {
           }
 
           asset.getRecipientAddress(data, (err, recipientAddress) => {
-            console.log(recipientAddress)
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
@@ -289,7 +285,6 @@ const asset = {
             }
 
             asset.insertMint(token.user, data, assetDetails, recipientAddress, (err, mintRequest) => {
-              console.log(mintRequest)
               if(err) {
                 res.status(500)
                 res.body = { 'status': 500, 'success': false, 'result': err }
@@ -366,7 +361,6 @@ const asset = {
 
                   })
                 } else {
-                  console.log(mintResponse)
                   res.status(500)
                   res.body = { 'status': 500, 'success': false, 'result': mintResponse }
                   return next(null, req, res, next)
@@ -449,6 +443,12 @@ const asset = {
     [user.uuid, assetDetails.uuid, data.amount, data.recipient_type, recipientAddress.address])
     .then((mintRequest) => {
       callback(null, mintRequest)
+
+      //just inserting into transactions for now
+      db.none('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
+      [user.uuid, 'Mint Asset', data.amount, mintRequest.uuid, 'Mint Asset'])
+      .then(() => {})
+      .catch((err) => { console.log(err) })
     })
     .catch(callback)
   },
@@ -479,7 +479,6 @@ const asset = {
       const token = encryption.decodeToken(req, res)
 
       asset.getAccountDetailsForUser(token.user.uuid, (err, accountDetails) => {
-        console.log(accountDetails)
         if(err) {
           res.status(500)
           res.body = { 'status': 500, 'success': false, 'result': err }
@@ -505,43 +504,95 @@ const asset = {
             return next(null, req, res, next)
           }
 
-          asset.insertBurn(token.user, data, assetDetails, (err, burnRequest) => {
-            console.log(burnRequest)
+          asset.getRecipientAddress(data, (err, recipientAddress) => {
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
             }
 
-            const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
-
-            zarNetwork.burn(data, assetDetails, privateKey, accountDetails.address, (err, burnResponse) => {
+            asset.insertBurn(token.user, data, assetDetails, recipientAddress, (err, burnRequest) => {
               if(err) {
                 res.status(500)
                 res.body = { 'status': 500, 'success': false, 'result': err }
                 return next(null, req, res, next)
               }
 
-              //get success
-              let success = false
-              let txId = null
-              try {
-                success = burnResponse.result.logs[0].success
-                txId = burnResponse.result.txhash
-              } catch(ex) {
-                console.log(ex)
-              }
+              const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
 
-              asset.updateBurnProcessed(burnRequest, burnResponse, (err) => {
+              zarNetwork.burn(data, assetDetails, privateKey, accountDetails.address, recipientAddress.address, (err, burnResponse) => {
                 if(err) {
                   res.status(500)
                   res.body = { 'status': 500, 'success': false, 'result': err }
                   return next(null, req, res, next)
                 }
 
-                res.status(205)
-                res.body = { 'status': 200, 'success': success, 'result': txId }
-                return next(null, req, res, next)
+                //get success
+                let success = false
+                let txId = null
+                try {
+                  success = burnResponse.result.logs[0].success
+                  txId = burnResponse.result.txhash
+                } catch(ex) {
+                  console.log(ex)
+                }
+
+
+                if(success) {
+
+                  zarNetwork.verifyTransactionSuccess(txId, (err, transactionDetails) => {
+                    if(err) {
+                      console.log(err)
+                      res.status(500)
+                      res.body = { 'status': 500, 'success': false, 'result': err }
+                      return next(null, req, res, next)
+                    }
+
+                    let burnSuccess = null
+                    let burnError = null
+                    try {
+                      burnError = transactionDetails.error
+
+                      if(burnError) {
+                        res.status(400)
+                        res.body = { 'status': 400, 'success': false, 'result': burnError }
+                        return next(null, req, res, next)
+                      }
+
+                      burnSuccess = transactionDetails.logs[0].success
+                      if(!burnSuccess) {
+                        burnError = JSON.parse(transactionDetails.logs[0].log).message
+
+                        res.status(400)
+                        res.body = { 'status': 400, 'success': false, 'result': burnError }
+                        return next(null, req, res, next)
+                      }
+                    } catch(ex) {
+                      console.log(ex)
+
+                      res.status(500)
+                      res.body = { 'status': 500, 'success': false, 'result': ex }
+                      return next(null, req, res, next)
+                    }
+
+
+                    asset.updateBurnProcessed(burnRequest, burnResponse, (err) => {
+                      if(err) {
+                        res.status(500)
+                        res.body = { 'status': 500, 'success': false, 'result': err }
+                        return next(null, req, res, next)
+                      }
+
+                      res.status(205)
+                      res.body = { 'status': 200, 'success': success, 'result': txId }
+                      return next(null, req, res, next)
+                    })
+                  })
+                } else {
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': burnResponse }
+                  return next(null, req, res, next)
+                }
               })
             })
           })
@@ -553,16 +604,11 @@ const asset = {
   validateBurn(data) {
     const {
       asset_uuid,
-      address,
-      amount
+      amount,
     } = data
 
     if(!asset_uuid) {
       return 'asset_uuid is required'
-    }
-
-    if(!address) {
-      return 'address is required'
     }
 
     if(!amount) {
@@ -572,11 +618,17 @@ const asset = {
     return true
   },
 
-  insertBurn(user, data, assetDetails, callback) {
-    db.oneOrNone('insert into burn_requests (uuid, user_uuid, asset_uuid, amount, recipient_address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid',
-    [user.uuid, assetDetails.uuid, data.amount, data.address])
+  insertBurn(user, data, assetDetails, recipientAddress, callback) {
+    db.oneOrNone('insert into burn_requests (uuid, user_uuid, asset_uuid, amount, recipient_type, recipient_address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid',
+    [user.uuid, assetDetails.uuid, data.amount, data.recipient_type, recipientAddress.address])
     .then((burnRequest) => {
       callback(null, burnRequest)
+
+      //just inserting into transactions for now
+      db.none('insert into transactions (uuid, user_uuid, reference, amount, source_uuid, type, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now());',
+      [user.uuid, 'Burn Asset', data.amount, burnRequest.uuid, 'Burn Asset'])
+      .then(() => {})
+      .catch((err) => { console.log(err) })
     })
     .catch(callback)
   },

@@ -28,10 +28,11 @@ const zar = {
 
   async issue(data, accountDetails, privateKey, callback) {
     try {
-      console.log(privateKey)
       const client = await this.getClient(privateKey)
-      console.log(client)
-      const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable)
+      console.log(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', data.owner_burnable, data.holder_burnable, data.from_burnable, !data.freezable)
+      const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', data.owner_burnable, data.holder_burnable, data.from_burnable, !data.freezable)
+
+      //issue(senderAddress, tokenName, symbol, totalSupply = 0, mintable = false, decimals = "18", description = "", burnOwnerDisabled = false, burnHolderDisabled = false, burnFromDisabled = false, freezeDisabled = false)
 
       console.log('***RESPONSE***')
       console.log(res)
@@ -39,6 +40,7 @@ const zar = {
 
       callback(null, res)
     } catch(e) {
+      console.log(e)
       console.log(e.toString())
       callback(e.toString())
     }
@@ -48,7 +50,6 @@ const zar = {
     try {
 
       console.log(fromAddress, assetDetails.asset_id, data.amount, toAddress)
-      console.log(privateKey)
 
       const client = await this.getClient(privateKey)
       const res = await client.mint(fromAddress, assetDetails.asset_id, data.amount, toAddress)
@@ -59,6 +60,7 @@ const zar = {
 
       callback(null, res)
     } catch(e) {
+      console.log(e)
       console.log(e.toString())
       callback(e.toString())
     }
@@ -81,7 +83,6 @@ const zar = {
     const url = `${config.zarApi}/txs/${txId}`;
 
     try {
-      console.log(`calling ${url}`)
       const apiRes = await axios.get(url);
       return apiRes.data
     } catch (err) {
@@ -100,16 +101,17 @@ const zar = {
     while(retries > 0) {
       const transactionDetails = await zar.getTransaction(txId)
 
-      console.log(transactionDetails)
       if(transactionDetails.error) {
         response = transactionDetails
         await sleep(1000)
-      } else if(transactionDetails.logs[0].success) {
+      } else if(transactionDetails.logs[0].success === true) {
         const succ = transactionDetails.logs[0].success
         if(succ) {
           response = transactionDetails
           break;
         }
+      } else {
+        response = transactionDetails
       }
 
       retries--
@@ -118,14 +120,13 @@ const zar = {
     callback(null, response)
   },
 
-  async burn(data, assetDetails, privateKey, address, callback) {
+  async burn(data, assetDetails, privateKey, fromAddress, toAddress, callback) {
     try {
 
-      console.log(address, assetDetails.asset_id, data.amount)
-      console.log('PRIVATE KEY: '+privateKey)
+      console.log(fromAddress, assetDetails.asset_id, data.amount, toAddress)
 
       const client = await this.getClient(privateKey)
-      const res = await client.burn(address, assetDetails.asset_id, data.amount)
+      const res = await client.burn(fromAddress, assetDetails.asset_id, data.amount, toAddress)
 
       console.log('***RESPONSE***')
       console.log(res)
@@ -134,6 +135,7 @@ const zar = {
       callback(null, res)
 
     } catch(e) {
+      console.log(e)
       console.log(e.toString())
       callback(e.toString())
     }
@@ -160,6 +162,7 @@ const zar = {
 
       callback(null, res)
     } catch(e) {
+      console.log(e)
       console.log(e.toString())
       callback(e.toString())
     }
@@ -179,6 +182,7 @@ const zar = {
       const res = await client.getBalance(address)
       callback(null, res)
     } catch(e) {
+      console.log(e)
       console.log(e.toString())
       callback(e.toString())
     }
