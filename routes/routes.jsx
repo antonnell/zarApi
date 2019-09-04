@@ -60,6 +60,7 @@ router.post('/api/v1/getAssets', validateRequest, bodyParser.json(), asset.getAs
 router.post('/api/v1/issueAsset', validateRequest, bodyParser.json(), asset.issueAsset)
 router.post('/api/v1/mintAsset', validateRequest, bodyParser.json(), asset.mintAsset)
 router.post('/api/v1/burnAsset', validateRequest, bodyParser.json(), asset.burnAsset)
+router.post('api/v1/uploadAssetImage', validateRequest, asset.uploadAssetImage)
 
 router.post('/api/v1/swap', validateRequest, bodyParser.json(), swap.swap)
 

@@ -639,6 +639,10 @@ const asset = {
     .then(callback)
     .catch(callback)
   },
+
+  uploadAssetImage(req, res, next) {
+
+  },
 }
 
 module.exports = asset

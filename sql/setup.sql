@@ -247,7 +247,7 @@ create table mint_requests (
 	user_uuid char(36),
 	asset_uuid char(36),
 	amount numeric,
-  recipient_address varchar(64),
+  recipient_type varchar(64),
 	recipient_address varchar(64),
 	processed boolean,
 	processed_time timestamp(6),
@@ -262,7 +262,7 @@ create table burn_requests (
 	user_uuid char(36),
 	asset_uuid char(36),
 	amount numeric,
-  recipient_address varchar(64),
+  recipient_type varchar(64),
 	recipient_address varchar(64),
 	processed boolean,
 	processed_time timestamp(6),
@@ -306,3 +306,6 @@ insert into notification_channels (uuid, description, created) values
 
 insert into deposit_details (uuid, bank_name, account_number, branch_code, account_type_uuid, created) values
 (md5(random()::text || clock_timestamp()::text)::uuid, 'Rand Merchant Bank', '1234567890', '261251', (select uuid from bank_account_types where account_type = 'Current/Cheque'), now());
+
+insert into assets (uuid, user_uuid, name, symbol, total_supply, minting_address_uuid, mintable, issued, issue_response, asset_id, created) values
+('fantomuuid', 'fantomuuid', 'Fantom', 'FTM', 10000000, 'fantomuuid', false, true, true, 'ftm', now());
