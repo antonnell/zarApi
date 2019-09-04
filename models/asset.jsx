@@ -16,7 +16,7 @@ const asset = {
         return next(null, req, res, next)
       }
 
-      db.manyOrNone('select uuid, user_uuid, asset_id from assets where issued is true;', [token.user.uuid])
+      db.manyOrNone('select uuid, user_uuid, asset_id, image_data, image_extension from assets where issued is true;', [token.user.uuid])
       .then((assets) => {
         if(!issueList || issueList.result.length === 0) {
           res.status(204)
@@ -29,6 +29,8 @@ const asset = {
           if(issueAsset.length > 0) {
             issue.uuid = issueAsset[0].uuid
             issue.user_uuid = issueAsset[0].user_uuid
+            issue.image_data = issueAsset[0].image_data
+            issue.image_extension = issueAsset[0].image_extension
           }
           return issue
         })
@@ -641,8 +643,81 @@ const asset = {
   },
 
   uploadAssetImage(req, res, next) {
+    encryption.descryptPayload(req, res, next, (data) => {
 
+      const validation = asset.validateUploadAssetImage(data)
+      if(validation !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': validation }
+        return next(null, req, res, next)
+      }
+
+      asset.getAssetDetails(data.asset_uuid, (err, assetDetails) => {
+        if(err) {
+          console.log(err)
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        if(!assetDetails) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'No matching address found' }
+          return next(null, req, res, next)
+        }
+
+        const token = encryption.decodeToken(req, res)
+
+        if(assetDetails.user_uuid != token.user.uuid) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Invalid asset owner' }
+          return next(null, req, res, next)
+        }
+
+        asset.updateImageData(data, (err) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': 'Asset updated' }
+          return next(null, req, res, next)
+        })
+      })
+    })
   },
+
+  validateUploadAssetImage(data) {
+    const {
+      asset_uuid,
+      image_data,
+      image_extension
+    } = data
+
+    if(!asset_uuid) {
+      return 'asset_uuid is required'
+    }
+
+    if(!image_data) {
+      return 'image_data is required'
+    }
+
+    if(!image_extension) {
+      return 'image_extension is required'
+    }
+
+    return true
+  },
+
+  updateImageData(data, callback) {
+    db.none('update assets set image_data = $1, image_extension = $2 where uuid = $3;',
+    [data.image_data, data.image_extension, data.asset_uuid])
+    .then(callback)
+    .catch(callback)
+  }
 }
 
 module.exports = asset

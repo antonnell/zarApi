@@ -237,6 +237,8 @@ create table assets (
 	issued boolean,
 	issue_response text,
 	asset_id char(14),
+  image_data text,
+  image_extension varchar(10),
 	created timestamp(6),
 	modified timestamp(6)
 );

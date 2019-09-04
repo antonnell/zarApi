@@ -5,6 +5,7 @@ const morgan = require('morgan')
 const helmet = require('helmet')
 const https = require('https')
 const auth = require('http-auth')
+const bodyParser = require('body-parser')
 
 /*  RTgwRjM3RjUyQkM0QzY0RUJCRkU0QURCQkNDNzU2RDUyRDI3MDQ0NUJCQTRCMjhEODkwRTg1MjQzNjlFNEJFMjo1Njg0NjJDNEI4MDhGQkRDRTZFRTE3MjhBQTNEN0M2RTgwMjQxMzMyMzk3NUQzRUI4MTM3MkFBNTEwRDUwQ0U3 */
 var basic = auth.basic({ realm: 'zar.network' }, function (username, password, callback) {
@@ -26,6 +27,8 @@ app.all('/*', function(req, res, next) {
     next()
   }
 })
+
+app.use(bodyParser.json({limit: '50mb'}));
 
 app.use(morgan('dev'))
 
