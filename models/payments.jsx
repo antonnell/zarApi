@@ -74,17 +74,17 @@ order by created desc;`, [token.user.uuid])
             return next(null, req, res, next)
           }
 
-          payments.getBeneficiary(data, (err, beneficiaryDetails) => {
-            console.log(beneficiaryDetails)
+
+          payments.getRecipientAddress(data, (err, recipientAddress) => {
             if(err) {
               res.status(500)
               res.body = { 'status': 500, 'success': false, 'result': err }
               return next(null, req, res, next)
             }
 
-            if(!beneficiaryDetails) {
+            if(!recipientAddress) {
               res.status(400)
-              res.body = { 'status': 400, 'success': false, 'result': 'No matching beneficiary record found' }
+              res.body = { 'status': 400, 'success': false, 'result': 'No matching recipient record found' }
               return next(null, req, res, next)
             }
 
@@ -105,7 +105,7 @@ order by created desc;`, [token.user.uuid])
                 }
 
                 //real-time processing the request
-                payments.processPayment(data, accountDetails, payment, beneficiaryDetails, (err, processResult) => {
+                payments.processPayment(data, accountDetails, payment, recipientAddress, (err, processResult) => {
                   if(err) {
                     console.log(err)
                     res.status(500)
@@ -129,6 +129,8 @@ order by created desc;`, [token.user.uuid])
     const {
       account_uuid,
       beneficiary_uuid,
+      own_account_uuid,
+      to_address,
       amount,
       reference,
       asset_id
@@ -136,10 +138,6 @@ order by created desc;`, [token.user.uuid])
 
     if(!account_uuid) {
       return 'account_uuid is required'
-    }
-
-    if(!beneficiary_uuid) {
-      return 'beneficiary_uuid is required'
     }
 
     if(!amount) {
@@ -158,6 +156,10 @@ order by created desc;`, [token.user.uuid])
       return 'asset_id is required'
     }
 
+    if(!to_address && !beneficiary_uuid && !own_account_uuid) {
+      return 'identifier is required'
+    }
+
     return true
   },
 
@@ -170,13 +172,28 @@ order by created desc;`, [token.user.uuid])
     .catch(callback)
   },
 
-  getBeneficiary(data, callback) {
-    db.oneOrNone('select * from beneficiaries b left join accounts a on a.user_uuid = b.beneficiary_user_uuid where b.uuid = $1;',
-    [data.beneficiary_uuid])
-    .then((beneficiary) => {
-      callback(null, beneficiary)
-    })
-    .catch(callback)
+  getRecipientAddress(data, callback) {
+    if(data.recipient_type == 'public') {
+      return callback(null, { address:  data.to_address })
+    }
+
+    if(data.recipient_type == 'beneficiary') {
+      db.oneOrNone('select a.address from beneficiaries b left join accounts a on b.beneficiary_user_uuid = a.user_uuid where b.uuid = $1;', [data.beneficiary_uuid])
+      .then((acc) => {
+        callback(null, acc)
+      })
+      .catch(callback)
+      return
+    }
+
+    if(data.recipient_type == 'own') {
+      db.oneOrNone('select address from accounts where uuid = $1;', [data.own_account_uuid])
+      .then((acc) => {
+        callback(null, acc)
+      })
+      .catch(callback)
+      return
+    }
   },
 
   insertPayment(user, data, callback) {
@@ -194,11 +211,11 @@ order by created desc;`, [token.user.uuid])
     .catch(callback)
   },
 
-  processPayment(data, accountDetails, payment, beneficiary, callback) {
+  processPayment(data, accountDetails, payment, recipientAddress, callback) {
 
     const privateKey = encryption.unhashAccountField(accountDetails.private_key, accountDetails.encr_key)
 
-    zarNetwork.transfer(data, beneficiary, privateKey, accountDetails.address, (err, processResult) => {
+    zarNetwork.transfer(data, recipientAddress, privateKey, accountDetails.address, (err, processResult) => {
       if(err) {
         return callback(err)
       }
