@@ -112,9 +112,13 @@ const asset = {
 
             //get success
             let success = false
+            let rawLog = null
             let txId = null
             try {
-              success = issueResponse.result.logs[0].success
+              success = issueResponse.result.logs ? issueResponse.result.logs[0].success : false
+              if(!success) {
+                rawLog = JSON.parse(issueResponse.result.raw_log)
+              }
               txId = issueResponse.result.txhash
             } catch(ex) {
               console.log(ex)
@@ -176,7 +180,7 @@ const asset = {
 
             } else {
               res.status(500)
-              res.body = { 'status': 500, 'success': false, 'result': 'Sending transaction failed' }
+              res.body = { 'status': 500, 'success': false, 'result': rawLog }
               return next(null, req, res, next)
             }
           })
