@@ -29,10 +29,11 @@ const zar = {
   async issue(data, accountDetails, privateKey, callback) {
     try {
       const client = await this.getClient(privateKey)
-      console.log(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', data.owner_burnable, data.holder_burnable, data.from_burnable, !data.freezable)
-      const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', false, false, false, true)
-
       //issue(senderAddress, tokenName, symbol, totalSupply = 0, mintable = false, decimals = "18", description = "", burnOwnerDisabled = false, burnHolderDisabled = false, burnFromDisabled = false, freezeDisabled = false)
+      console.log(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', data.owner_burnable, data.holder_burnable, data.from_burnable, !data.freezable)
+
+      const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable)
+
 
       console.log('***RESPONSE***')
       console.log(res)
