@@ -93,7 +93,7 @@ const auth = {
         return next(null, req, res, next)
       }
 
-      auth.getUserDetails(data.mobile_number, null, (err, userDetails) => {
+      auth.getUserDetails(data.mobile_number, data.email_address, (err, userDetails) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -134,11 +134,12 @@ const auth = {
 
   validateRequestResetPassword(data) {
     const {
-      mobile_number
+      mobile_number,
+      email_address
     } = data
 
-    if(!mobile_number) {
-      return 'mobile_number is required'
+    if(!mobile_number && !email_address) {
+      return 'mobile_number or email_address is required'
     }
 
     return true
@@ -206,6 +207,7 @@ const auth = {
   validateVerifyResetPassword(data) {
     const {
       mobile_number,
+      email_address,
       pin
     } = data
 
@@ -213,15 +215,15 @@ const auth = {
       return 'pin is required'
     }
 
-    if(!mobile_number) {
-      return 'mobile_number is required'
+    if(!mobile_number && !email_address) {
+      return 'mobile_number or email_address is required'
     }
 
     return true
   },
 
   selectOTP(data, callback) {
-    db.oneOrNone('select * from otp where user_uuid = (select uuid from users where mobile_number = $1) and token = $2;', [data.mobile_number, data.pin])
+    db.oneOrNone('select * from otp where user_uuid = (select uuid from users where mobile_number = $1 or email_address = $3 order by created desc limit 1) and token = $2;', [data.mobile_number, data.pin, data.email_address])
     .then((otpDetails) => {
       callback(null, otpDetails)
     })
