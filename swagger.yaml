@@ -26,7 +26,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/LoginResponse'
         '204':
           description: Invalid Credentials
         '400':
@@ -47,7 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/RegisterResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -70,7 +70,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetAccountsResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -91,7 +91,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/CreateAccountResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -114,7 +114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetAssetsResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -135,7 +135,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -158,7 +158,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -181,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -204,7 +204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -227,7 +227,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetBankAccountsResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -248,7 +248,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/CreateBankAccountResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -271,7 +271,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetBanksResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -292,7 +292,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetBankAccountTypesResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -313,7 +313,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetBeneficiariesResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -334,7 +334,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/CreateBeneficiaryResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -357,7 +357,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -378,7 +378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -397,7 +397,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -416,7 +416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/RequestDepositResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -435,7 +435,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -454,7 +454,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/GetTransactionsResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -471,7 +471,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -490,7 +490,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -509,7 +509,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -532,7 +532,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiMessageResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -555,7 +555,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/UpdateNameResponse'
         '400':
           description: Invalid Payload
         '500':
@@ -583,11 +583,15 @@ components:
       type: object
       required:
         - email_address
+        - mobile_number
           password
       properties:
         email_address:
           type: string
           example: name@domain.com
+        mobile_number:
+          type: string
+          example: "+27821234567"
         password:
           type: string
           example: example_password
@@ -879,7 +883,7 @@ components:
         account_number:
           type: string
           example: "0123456789"
-    ApiResponse:
+    ApiMessageResponse:
       type: object
       properties:
         status:
@@ -888,7 +892,307 @@ components:
         success:
           type: boolean
         result:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/User'
+    RegisterResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/User'
+    GetAccountsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    CreateAccountResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/Account'
+    GetAssetsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+    GetBankAccountsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankAccount'
+    CreateBankAccountResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/BankAccount'
+    GetBanksResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bank'
+    GetBankAccountTypesResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankAccountType'
+    GetBeneficiariesResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Beneficiary'
+    CreateBeneficiaryResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/Beneficiary'
+    RequestDepositResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/DepositDetails'
+    UpdateNameResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/User'
+    GetTransactionsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    User:
+      type: object
+      properties:
+        uuid:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email_address:
+          type: string
+        mobile_number:
+          type: string
+        jwt:
           type: object
+    Account:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        account_type:
+          type: string
+        created:
+          type: string
+    Asset:
+      type: object
+      properties:
+        burn_from_disabled:
+          type: boolean
+        burn_holder_disabled:
+          type: boolean
+        burn_owner_disabled:
+          type: boolean
+        freeze_disabled:
+          type: boolean
+        minting_finished:
+          type: boolean
+        decimals:
+          type: string
+        description:
+          type: string
+        issue_id:
+          type: string
+        issue_time:
+          type: string
+        issuer:
+          type: string
+        name:
+          type: string
+        owner:
+          type: string
+        symbol:
+          type: string
+        total_supply:
+          type: string
+        user_uuid:
+          type: string
+        uuid:
+          type: string
+    BankAccount:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        kyc_approved:
+          type: boolean
+        full_name:
+          type: string
+        bank_name:
+          type: string
+        account_type:
+          type: string
+        created:
+          type: string
+    Bank:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        branch_code:
+          type: string
+    BankAccountType:
+      type: object
+      properties:
+        uuid:
+          type: string
+        account_type:
+          type: string
+    Beneficiary:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        mobile_number:
+          type: string
+        email_address:
+          type: string
+        account_address:
+          type: string
+        reference:
+          type: string
+    DepositDetails:
+      type: object
+      properties:
+        uuid:
+          type: string
+        reference:
+          type: string
+        amount:
+          type: string
+        bank_name:
+          type: string
+        account_number:
+          type: string
+        branch_code:
+          type: string
+        account_type:
+          type: string
+    Transaction:
+      type: object
+      properties:
+        uuid:
+          type: string
+        user_uuid:
+          type: string
+        amount:
+          type: integer
+        reference:
+          type: string
+        symbol:
+          type: string
+        type:
+          type: string
+          enum: ["Transfer", "Mint", "Burn"]
+        created:
+          type: string
   requestBodies:
     Login:
       content:
