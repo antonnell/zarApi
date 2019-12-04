@@ -1,13 +1,13 @@
 branch-defaults:
   master:
-    environment: zar-api-env
+    environment: zar-pay-api
     group_suffix: null
 global:
-  application_name: zar-api
+  application_name: zar-pay-api
   branch: null
   default_ec2_keyname: null
   default_platform: node.js
-  default_region: us-east-2
+  default_region: eu-west-1
   include_git_submodules: true
   instance_profile: null
   platform_name: null

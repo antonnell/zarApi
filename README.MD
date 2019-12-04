@@ -1,6 +1,6 @@
-# ZAR Network API
+# XAR Network API
 
-An express API that acts as a middle layer between the ZAR Network blockchain and Front End layers.
+An express API that acts as a middle layer between the XAR Network blockchain and Front End layers.
 It provides a 'centralised' layer to support easy navigation of data for a client.
 
 ## Getting Started
