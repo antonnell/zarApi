@@ -285,6 +285,42 @@ create table native_denoms (
 	created timestamp(6)
 );
 
+create table csdts(
+	uuid char(36),
+	user_uuid char(36),
+	account_uuid char(36),
+	modified timestamp(6),
+	created timestamp(6)
+);
+
+create table csdt_transactions(
+	uuid char(36,
+	csdt_uuid char(36,
+	user_uuid char(36,
+	transaction_type varchar(32),
+	transaction_denom varchar(32),
+	transaction_amount  varchar(32),
+	created timestamp(6)
+);
+
+create table savings_transactions(
+	uuid char(36),
+	user_uuid char(36),
+	account_uuid char(36),
+	recipient_uuid char(36),
+	amount numeric,
+	transaction_type varchar(36),
+	processed	boolean,
+	processed_time timestamp(6),
+	processed_result text,
+	created timestamp(6)
+);
+
+create table savings_account_deposit_details(
+	uuid char(36),
+	address varchar(64),
+	created timestamp(6)
+);
 
 
 insert into banks (uuid, name, branch_code, created) values
