@@ -146,7 +146,7 @@ create table payments (
 	account_uuid char(36),
 	beneficiary_uuid char(36),
 	amount numeric,
-	asset_id char(14),
+	asset_id varchar(14),
 	reference varchar(128),
 	processed boolean,
 	processed_time timestamp(6),
@@ -178,6 +178,8 @@ create table deposit_details (
 	account_number varchar(16),
 	branch_code varchar(16),
 	account_type_uuid char(36),
+  swift varchar(12),
+  iban varchar(36),
 	created timestamp(6),
 	modified timestamp(6)
 );
@@ -236,7 +238,7 @@ create table assets (
 	freezable boolean,
 	issued boolean,
 	issue_response text,
-	asset_id char(14),
+	asset_id varchar(14),
   image_data text,
   image_extension varchar(10),
 	created timestamp(6),
@@ -271,6 +273,16 @@ create table burn_requests (
 	processed_result text,
 	created timestamp(6),
 	modified timestamp(6)
+);
+
+drop table if exists native_denoms;
+create table native_denoms (
+	uuid char(36) primary key,
+	name varchar(50),
+	denom varchar(14),
+  image_data text,
+  image_extension varchar(10),
+	created timestamp(6)
 );
 
 
@@ -309,5 +321,10 @@ insert into notification_channels (uuid, description, created) values
 insert into deposit_details (uuid, bank_name, account_number, branch_code, account_type_uuid, created) values
 (md5(random()::text || clock_timestamp()::text)::uuid, 'Rand Merchant Bank', '1234567890', '261251', (select uuid from bank_account_types where account_type = 'Current/Cheque'), now());
 
-insert into assets (uuid, user_uuid, name, symbol, total_supply, minting_address_uuid, mintable, issued, issue_response, asset_id, created) values
-('fantomuuid', 'fantomuuid', 'Fantom', 'FTM', 10000000, 'fantomuuid', false, true, true, 'ftm', now());
+insert into native_denoms (uuid, name, denom, created) values
+(md5(random()::text || clock_timestamp()::text)::uuid, 'Fantom', 'uftm', now()),
+(md5(random()::text || clock_timestamp()::text)::uuid, 'Zar', 'uzar', now()),
+(md5(random()::text || clock_timestamp()::text)::uuid, 'Bitcoin', 'ubtc', now()),
+(md5(random()::text || clock_timestamp()::text)::uuid, 'Collateralized Stable Debt Coin', 'ucsdt', now()),
+(md5(random()::text || clock_timestamp()::text)::uuid, 'Euro', 'ueur', now()),
+(md5(random()::text || clock_timestamp()::text)::uuid, 'United States Dollar', 'uusd', now());

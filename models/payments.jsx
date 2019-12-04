@@ -11,7 +11,7 @@ const payments = {
   getTransactions(req, res, next) {
     const token = encryption.decodeToken(req, res)
     db.manyOrNone(`select * from (
-select p.uuid, p.user_uuid, p.amount, p.reference, a.symbol, p.created, 'Transfer' as type from payments p left join assets a on a.asset_id = p.asset_id where p.user_uuid = $1
+select p.uuid, p.user_uuid, p.amount, p.reference, CASE WHEN (a.symbol IS NULL) THEN nd.denom ELSE a.symbol END as symbol, p.created, 'Transfer' as type from payments p left join assets a on a.asset_id = p.asset_id left join native_denoms nd on p.asset_id = nd.denom where p.user_uuid = $1
 union
 select mr.uuid, mr.user_uuid, mr.amount, 'Mint Request', a.symbol, mr.created, 'Mint Asset' as type from mint_requests mr left join assets a on a.uuid = mr.asset_uuid where mr.user_uuid = $1
 union

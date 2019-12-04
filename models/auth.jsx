@@ -110,7 +110,7 @@ const auth = {
         const OTP = otpHelper.generateOTP()
         auth.insertOTP(userDetails, OTP, (err, otpUUID) => {
 
-          const OTPMessage = 'Your ZAR Network OTP is: '+OTP
+          const OTPMessage = 'Your XAR Network OTP is: '+OTP
           sms.send(userDetails.mobile_number, OTPMessage, (err) => {
 
             auth.updateOTPSent(otpUUID, (err) => {

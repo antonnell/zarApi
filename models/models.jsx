@@ -9,6 +9,9 @@ const Users = require('./users.jsx');
 const Testing = require('./testing.jsx');
 const Asset = require('./asset.jsx');
 const Swap = require('./swap.jsx');
+const CSDT = require('./csdt.jsx');
+const Savings = require('./savings.jsx');
+const NativeDenoms = require('./nativeDenoms.jsx');
 
 const models = {
   accounts: Accounts,
@@ -21,7 +24,10 @@ const models = {
   users: Users,
   testing: Testing,
   asset: Asset,
-  swap: Swap
+  swap: Swap,
+  csdt: CSDT,
+  savings: Savings,
+  nativeDenoms: NativeDenoms,
 }
 
 module.exports = models

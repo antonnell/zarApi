@@ -5,6 +5,7 @@ const ZarNetwork = require('./zarNetwork.jsx');
 const OTP = require('./otp.jsx');
 const SMS = require('./smser.jsx');
 const Sleep = require('./sleep.jsx');
+const Bank = require('./bank.jsx');
 
 const helpers = {
   db:  DB,
@@ -13,7 +14,8 @@ const helpers = {
   // ethereum: Ethereum,
   otpHelper: OTP,
   sms: SMS,
-  sleep: Sleep
+  sleep: Sleep,
+  bank: Bank,
 }
 
 module.exports = helpers

@@ -14,7 +14,10 @@ const {
   testing,
   token,
   asset,
-  swap
+  swap,
+  csdt,
+  savings,
+  nativeDenoms
 } = require('../models')
 
 router.get('/', function (req, res, next) {
@@ -62,5 +65,20 @@ router.post('/api/v1/burnAsset', validateRequest, asset.burnAsset)
 router.post('/api/v1/uploadAssetImage', validateRequest, asset.uploadAssetImage)
 
 router.post('/api/v1/swap', validateRequest, swap.swap)
+
+router.post('/api/v1/savingsDeposit', validateRequest, savings.deposit)
+router.post('/api/v1/savingsWithdraw', validateRequest, savings.withdraw)
+
+router.post('/api/v1/createCSDT', validateRequest, csdt.createCSDT)
+router.post('/api/v1/closeCSDT', validateRequest, csdt.closeCSDT)
+router.post('/api/v1/depositCSDT', validateRequest, csdt.depositCSDT)
+router.post('/api/v1/withdrawCSDT', validateRequest, csdt.withdrawCSDT)
+router.post('/api/v1/paybackCSDT', validateRequest, csdt.paybackCSDT)
+router.post('/api/v1/generateCSDT', validateRequest, csdt.generateCSDT)
+router.post('/api/v1/getCSDT', validateRequest, csdt.getCSDT)
+router.post('/api/v1/getCSDTPrices', validateRequest, csdt.getCSDTPrices)
+router.post('/api/v1/getCSDTHistory', validateRequest, csdt.getCSDTHistory)
+
+router.post('/api/v1/getNativeDenoms', validateRequest, nativeDenoms.getNativeDenoms)
 
 module.exports = router

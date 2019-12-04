@@ -3,12 +3,12 @@ const config = require('../config')
 const httpClient = axios.create({ baseURL: config.zarApi });
 const sleep = require('../helpers/sleep.jsx');
 
-const ZarClient = require('@zar-network/javascript-sdk')
-const crypto = require('@zar-network/javascript-sdk').crypto
+const XarClient = require('@xar-network/javascript-sdk')
+const crypto = require('@xar-network/javascript-sdk').crypto
 
 const zar = {
   async getClient(privateKey) {
-    const client = new ZarClient(config.zarApi)
+    const client = new XarClient(config.zarApi)
     await client.initChain()
     if(privateKey) {
       await client.setPrivateKey(privateKey)
@@ -16,7 +16,7 @@ const zar = {
     return client
   },
 
-  async createKey(name, password, callback) {
+  async createKey(callback) {
     try {
       const client = await this.getClient()
       const res = client.createAccountWithMneomnic()
@@ -26,14 +26,22 @@ const zar = {
     }
   },
 
+  async createSavingsAccount(callback) {
+    try {
+      const client = await this.getClient()
+      const res = client.createSavingsAccount()
+      callback(null, res)
+    } catch(e) {
+      callback(e)
+    }
+  },
+
   async issue(data, accountDetails, privateKey, callback) {
     try {
       const client = await this.getClient(privateKey)
-      //issue(senderAddress, tokenName, symbol, totalSupply = 0, mintable = false, decimals = "18", description = "", burnOwnerDisabled = false, burnHolderDisabled = false, burnFromDisabled = false, freezeDisabled = false)
       console.log(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable, 18, '', data.owner_burnable, data.holder_burnable, data.from_burnable, !data.freezable)
 
       const res = await client.issue(accountDetails.address, data.name, data.symbol, data.total_supply, !data.mintable)
-
 
       console.log('***RESPONSE***')
       console.log(res)
@@ -49,7 +57,6 @@ const zar = {
 
   async mint(data, assetDetails, privateKey, fromAddress, toAddress, callback) {
     try {
-
       console.log(fromAddress, assetDetails.asset_id, data.amount, toAddress)
 
       const client = await this.getClient(privateKey)
@@ -123,7 +130,6 @@ const zar = {
 
   async burn(data, assetDetails, privateKey, fromAddress, toAddress, callback) {
     try {
-
       console.log(fromAddress, assetDetails.asset_id, data.amount, toAddress)
 
       const client = await this.getClient(privateKey)
@@ -145,17 +151,11 @@ const zar = {
   async transfer(data, beneficiary, privateKey, address, callback) {
 
     try {
-
+      console.log(data, beneficiary, privateKey, address)
       const client = await this.getClient(privateKey)
-      const getAccount = await client.getAccount(address)
 
-      console.log('***RESPONSE FOR GET***')
-      console.log(getAccount.result.result.value.sequence)
-      console.log('***RESPONSE FOR GET***')
-
-      console.log(address, beneficiary.address, data.amount, data.asset_id, data.reference, getAccount.result.result.value.sequence)
-
-      const res = await client.transfer(address, beneficiary.address, data.amount, data.asset_id, data.reference, getAccount.result.result.value.sequence)
+      console.log(address, beneficiary.address, data.amount, data.asset_id, data.reference)
+      const res = await client.transfer(address, beneficiary.address, data.amount, data.asset_id, data.reference)
 
       console.log('***RESPONSE***')
       console.log(res)
@@ -190,7 +190,7 @@ const zar = {
   },
 
   getTransactions(address, symbol, callback) {
-
+    //TODO: Implement
   },
 
   getIssueList(callback) {
@@ -204,6 +204,151 @@ const zar = {
       .catch((error) => {
         callback(error)
       });
+  },
+
+  getDenomList(callback) {
+    const url = `${config.zarApi}/supply/total`;
+
+    httpClient
+      .get(url)
+      .then((res) => {
+        callback(null, res.data)
+      })
+      .catch((error) => {
+        callback(error)
+      });
+  },
+
+  async getDenomPrice(denom, callback) {
+    try {
+      const client = await this.getClient()
+      const res = await client.getCurrentPrice(denom)
+      console.log('RESPONSE FOR GET DENOM PRICE FOR ', denom)
+      console.log(res)
+      console.log('END RESPONSE FOR GET DENOM PRICE END')
+      callback(null, res)
+    } catch(e) {
+      callback(e.toString())
+    }
+  },
+
+  async getCSDT(address, denom, callback) {
+    try {
+      const client = await this.getClient()
+      const res = await client.getCSDT(address, denom)
+
+      callback(null, res)
+    } catch(e) {
+      callback(e)
+    }
+  },
+
+  async createCSDT(privateKey, fromAddress, collateralDenom, collateralChange, debtChange, callback) {
+
+    try {
+      console.log(fromAddress, collateralDenom, collateralChange, debtChange)
+
+      const client = await this.getClient(privateKey)
+      const msg = client.CSDT.createOrModifyCSDT(fromAddress, collateralDenom, collateralChange, debtChange)
+      const res = await client.sendTx(msg, fromAddress)
+
+      console.log('***RESPONSE***')
+      console.log(res)
+      console.log('***RESPONSE***')
+
+      callback(null, res)
+    } catch(e) {
+      console.log(e)
+      callback(e.toString())
+    }
+  },
+
+  closeCSDT(/* inputs, */callback) {
+    return 'ok'
+  },
+
+  async paybackCSDT(privateKey, fromAddress, collateralDenom, debtChange, callback) {
+    try {
+      console.log(fromAddress, collateralDenom, debtChange)
+
+      const client = await this.getClient(privateKey)
+      const msg = client.CSDT.settleDebt(fromAddress, collateralDenom, "ucsdt", debtChange.toString())
+      const res = await client.sendTx(msg, fromAddress)
+
+      console.log('***RESPONSE***')
+      console.log(res)
+      console.log('***RESPONSE***')
+
+      callback(null, res)
+    } catch(e) {
+      console.log(e)
+      callback(e.toString())
+    }
+  },
+
+  async generateCSDT(privateKey, fromAddress, collateralDenom, debtChange, callback) {
+    try {
+      console.log(fromAddress, collateralDenom, debtChange)
+
+      const client = await this.getClient(privateKey)
+      const msg = client.CSDT.withdrawDebt(fromAddress, collateralDenom, "ucsdt", debtChange)
+      const res = await client.sendTx(msg, fromAddress)
+
+      console.log('***RESPONSE***')
+      console.log(res)
+      console.log('***RESPONSE***')
+
+      callback(null, res)
+    } catch(e) {
+      console.log(e)
+      callback(e.toString())
+    }
+  },
+
+  async depositCSDT(privateKey, fromAddress, collateralDenom, collateralChange, callback) {
+    try {
+      console.log(fromAddress, collateralDenom, collateralChange)
+
+      const client = await this.getClient(privateKey)
+      const msg = client.CSDT.depositCollateral(fromAddress, collateralDenom, collateralChange)
+      const res = await client.sendTx(msg, fromAddress)
+
+      console.log('***RESPONSE***')
+      console.log(res)
+      console.log('***RESPONSE***')
+
+      callback(null, res)
+    } catch(e) {
+      console.log(e)
+      callback(e.toString())
+    }
+  },
+
+  async withdrawCSDT(privateKey, fromAddress, collateralDenom, collateralChange, callback) {
+    try {
+      console.log(fromAddress, collateralDenom, collateralChange)
+
+      const client = await this.getClient(privateKey)
+      const msg = client.CSDT.withdrawCollateral(fromAddress, collateralDenom, collateralChange)
+      const res = await client.sendTx(msg, fromAddress)
+
+      console.log('***RESPONSE***')
+      console.log(res)
+      console.log('***RESPONSE***')
+
+      callback(null, res)
+    } catch(e) {
+      console.log(e)
+      callback(e.toString())
+    }
+  },
+
+  getCSDTMarkets(/* inputs, */callback) {
+    return 'ok'
+  },
+
+  getCSDTHistory(/* inputs, */callback) {
+    return 'ok'
   },
 }
 

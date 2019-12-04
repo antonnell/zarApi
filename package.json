@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/antonnell/zarApi#readme",
   "dependencies": {
-    "@zar-network/javascript-sdk": "^2.15.11",
+    "@xar-network/javascript-sdk": "^2.17.3",
     "async": "^3.1.0",
     "aws-sdk": "^2.522.0",
     "axios": "^0.19.0",
