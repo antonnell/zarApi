@@ -4,7 +4,7 @@ const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 
-  encrKey: process.env.ZAR_KEY,
+  encr_key: process.env.ZAR_KEY,
   zarApi: process.env.ZAR_API,
   secret: process.env.ZAR_SECRET,
 

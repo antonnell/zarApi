@@ -7,7 +7,7 @@ const config = {
   emailerUser: '',
   emailerPassword: '',
 
-  encrKey: "",
+  encr_key: "",
 
   //Binance
   api: "",
